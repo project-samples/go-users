@@ -35,12 +35,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"go-service/internal/usecase/article"
-	"go-service/internal/usecase/location"
-	"go-service/internal/usecase/myarticles"
-	"go-service/internal/usecase/myprofile"
-	"go-service/internal/usecase/rate"
-	"go-service/internal/usecase/user"
+	"go-service/internal/article"
+	"go-service/internal/location"
+	"go-service/internal/myarticles"
+	"go-service/internal/myprofile"
+	"go-service/internal/rate"
+	"go-service/internal/user"
 )
 
 type ApplicationContext struct {

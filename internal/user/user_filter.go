@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/core-go/search"
-	"go-service/internal/usecase/myprofile"
+	"go-service/internal/myprofile"
 )
 
 type UserFilter struct {
