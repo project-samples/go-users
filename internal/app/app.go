@@ -23,6 +23,7 @@ import (
 	pm "github.com/core-go/password/mongo"
 	"github.com/core-go/redis"
 	"github.com/core-go/search"
+	"github.com/core-go/search/convert"
 	"github.com/core-go/search/mongo"
 	. "github.com/core-go/security/crypto"
 	. "github.com/core-go/security/jwt"
@@ -31,15 +32,22 @@ import (
 	sm "github.com/core-go/signup/mongo"
 	s "github.com/core-go/sql"
 	q "github.com/core-go/sql/query"
+	"github.com/core-go/sql/template"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"go-service/internal/appreciation"
 	"go-service/internal/article"
+	"go-service/internal/comment"
+	"go-service/internal/follow"
 	"go-service/internal/location"
+	"go-service/internal/locationrate"
 	"go-service/internal/myarticles"
 	"go-service/internal/myprofile"
 	"go-service/internal/rate"
+	"go-service/internal/reaction"
 	"go-service/internal/user"
 )
 
@@ -56,9 +64,14 @@ type ApplicationContext struct {
 	Interest       *q.QueryHandler
 	LookingFor     *q.QueryHandler
 	Location       location.LocationHandler
-	LocationRate   rate.RateHandler
+	LocationRate   locationrate.RateHandler
 	MyArticles     myarticles.ArticleHandler
 	Article        article.ArticleHandler
+	Appreciation   appreciation.AppreciationHandler
+	Follow         follow.FollowHandler
+	Comment        comment.CommentHandler
+	Reaction       reaction.ReactionHandler
+	Rate           rate.RateHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
@@ -80,6 +93,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	action := sv.InitializeAction(conf.Action)
 	validator := v.NewValidator()
 	generateId := shortid.Generate
+
+	buildParam := q.GetBuild(db)
+	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml")
+	if err != nil {
+		return nil, err
+	}
 
 	userCollection := "user"
 	authentication := "authentication"
@@ -175,11 +194,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	locationService := location.NewLocationService(locationRepository, locationInfoRepository)
 	locationHandler := location.NewLocationHandler(locationSearchBuilder.Search, locationService, log.LogError, nil)
 
-	locationRateType := reflect.TypeOf(rate.Rate{})
+	locationRateType := reflect.TypeOf(locationrate.Rate{})
 	locationRateQuery := query.UseQuery(locationRateType)
 	locationRateSearchBuilder := mgo.NewSearchBuilder(locationDb, "locationRate", locationRateQuery, search.GetSort)
 	getLocationRate := mgo.UseGet(locationDb, "locationRate", locationRateType)
-	locationRateHandler := rate.NewRateHandler(locationRateSearchBuilder.Search, getLocationRate, log.LogError, nil)
+	locationRateHandler := locationrate.NewRateHandler(locationRateSearchBuilder.Search, getLocationRate, log.LogError, nil)
 
 	myarticlesType := reflect.TypeOf(myarticles.Article{})
 	myarticlesQuery := query.UseQuery(myarticlesType)
@@ -194,6 +213,53 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	articleRepository := mgo.NewRepository(locationDb, "article", articleType)
 	articleService := article.NewArticleService(articleRepository)
 	articleHandler := article.NewArticleHandler(articleSearchBuilder.Search, articleService, log.LogError, nil)
+
+	// Follow
+	followService := follow.NewFollowService(db, "userfollower", "userfollowing", "userinfo")
+	followHandler := follow.NewFollowHandler(followService, modelStatus, log.LogError, validator.Validate, &action)
+
+	// Appreciation
+	appreciationService := appreciation.NewAppreciationService(
+		db,
+		"userreaction", "id", "author", "reaction",
+		"level", "count",
+		"userinfo", "id", "reactioncount")
+	appreciationHandler := appreciation.NewAppreciationHandler(appreciationService, modelStatus, log.LogError, validator.Validate, &action)
+
+	// Comment
+	commentType := reflect.TypeOf(comment.Comment{})
+	queryComment, _ := template.UseQueryWithArray(conf.Template, comment.BuildCommentQuery, "comment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
+	commentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryComment, pq.Array)
+	if err != nil {
+		return nil, err
+	}
+	commentService := comment.NewCommentService(
+		db,
+		"gocomment", "commentid", "id", "author", "userid", "comment", "time", "updateat",
+		"gorate", "id", "author", "commentcount",
+		pq.Array)
+	commentHandler := comment.NewCommentHandler(commentSearchBuilder.Search, commentService, modelStatus, log.LogError, validator.Validate, &action)
+
+	// Reaction
+	reactionService := reaction.NewReactionService(
+		db,
+		"goreaction", "id", "author", "userid", "time", "type",
+		"gorate", "id", "author", "usefulcount")
+	reactionHandler := reaction.NewReactionHandler(reactionService, modelStatus, log.LogError, validator.Validate, &action)
+
+	// Rate
+	rateType := reflect.TypeOf(rate.Rate{})
+	queryRate, _ := template.UseQueryWithArray(conf.Template, rate.BuildRateQuery, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
+	rateSearchBuilder, err := s.NewSearchBuilderWithArray(db, rateType, queryRate, pq.Array)
+	if err != nil {
+		return nil, err
+	}
+	rateService := rate.NewRateService(
+		db,
+		"gorate", "id", "author", "rate", "review", "time", "usefulcount", "commentcount",
+		"gorateinfo", "id", "rate", "count", "score",
+		pq.Array)
+	rateHandler := rate.NewRateHandler(rateSearchBuilder.Search, rateService, modelStatus, log.LogError, validator.Validate, &action)
 
 	healthHandler := NewHandler(redisHealthChecker, mongoHealthChecker)
 
@@ -213,6 +279,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		LocationRate:   locationRateHandler,
 		MyArticles:     myarticlesHandler,
 		Article:        articleHandler,
+		Appreciation:   appreciationHandler,
+		Follow:         followHandler,
+		Comment:        commentHandler,
+		Reaction:       reactionHandler,
+		Rate:           rateHandler,
 	}
 	return &app, nil
 }

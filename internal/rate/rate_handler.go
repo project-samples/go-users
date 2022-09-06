@@ -4,35 +4,58 @@ import (
 	"context"
 	"net/http"
 	"reflect"
+	"time"
 
 	sv "github.com/core-go/core"
 	"github.com/core-go/search"
+	"github.com/gorilla/mux"
 )
 
 type RateHandler interface {
 	Search(w http.ResponseWriter, r *http.Request)
 	Load(w http.ResponseWriter, r *http.Request)
+	Rate(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRateHandler(find func(context.Context, interface{}, interface{}, int64, ...int64) (int64, string, error), load func(ctx context.Context, id interface{}, result interface{}) (bool, error), logError func(context.Context, string, ...map[string]interface{}), writeLog func(context.Context, string, string, bool, string) error) RateHandler {
+func NewRateHandler(find func(context.Context, interface{}, interface{}, int64, ...int64) (int64, string, error), service RateService, status sv.StatusConfig, logError func(context.Context, string, ...map[string]interface{}), validate func(ctx context.Context, model interface{}) ([]sv.ErrorMessage, error), action *sv.ActionConfig) RateHandler {
 	searchModelType := reflect.TypeOf(RateFilter{})
 	modelType := reflect.TypeOf(Rate{})
-	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
-	return &rateHandler{load: load, SearchHandler: searchHandler, Error: logError, Log: writeLog}
+	params := sv.CreateParams(modelType, &status, logError, validate, action)
+	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, params.Log)
+	return &rateHandler{service: service, SearchHandler: searchHandler, Params: params}
 }
 
 type rateHandler struct {
-	load func(ctx context.Context, id interface{}, result interface{}) (bool, error)
+	service RateService
 	*search.SearchHandler
-	Error func(context.Context, string, ...map[string]interface{})
-	Log   func(context.Context, string, string, bool, string) error
+	*sv.Params
 }
 
 func (h *rateHandler) Load(w http.ResponseWriter, r *http.Request) {
-	id := sv.GetRequiredParam(w, r)
+	id := mux.Vars(r)["id"]
+	author := mux.Vars(r)["author"]
 	if len(id) > 0 {
-		var rate Rate
-		ok, err := h.load(r.Context(), id, &rate)
-		sv.RespondIfFound(w, r, rate, ok, err, h.Error, nil)
+		res, err := h.service.Load(r.Context(), id, author)
+		sv.RespondModel(w, r, res, err, h.Error, nil)
+	}
+}
+
+func (h *rateHandler) Rate(w http.ResponseWriter, r *http.Request) {
+	var rate Rate
+	var t = time.Now()
+	rate.Time = &t
+	er1 := sv.Decode(w, r, &rate)
+	if mux.Vars(r)["id"] != "" {
+		rate.Id = mux.Vars(r)["id"]
+	}
+	if mux.Vars(r)["author"] != "" {
+		rate.Author = mux.Vars(r)["author"]
+	}
+	if er1 == nil {
+		errors, er2 := h.Validate(r.Context(), &rate)
+		if !sv.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Create) {
+			result, er3 := h.service.Rate(r.Context(), &rate)
+			sv.AfterCreated(w, r, &rate, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Create)
+		}
 	}
 }

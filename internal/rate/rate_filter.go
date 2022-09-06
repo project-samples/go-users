@@ -2,14 +2,15 @@ package rate
 
 import (
 	"github.com/core-go/search"
-	"time"
 )
 
 type RateFilter struct {
 	*search.Filter
-	Id         string     `mapstructure:"id" json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"id,omitempty" firestore:"-"`
-	Review     string     `mapstructure:"review" json:"review" gorm:"column:review" bson:"review" dynamodbav:"review,omitempty" firestore:"review,omitempty" `
-	LocationId string     `mapstructure:"locationId" json:"locationId,omitempty" gorm:"column:locationid" bson:"locationId,omitempty" dynamodbav:"locationId,omitempty" firestore:"locationId,omitempty" validate:"required,max=255"`
-	UserId     string     `mapstructure:"userId" json:"userId,omitempty" gorm:"column:userId" bson:"userId,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty"`
-	RateTime   *time.Time `mapstructure:"rate_time" json:"rateTime,omitempty" gorm:"column:ratetime" bson:"ratetime,omitempty" dynamodbav:"rateTime,omitempty" firestore:"-"`
+	Id           string            `json:"id" gorm:"column:id;primary_key" bson:"id" dynamodbav:"id" firestore:"id" match:"equal" validate:"max=255"`
+	Author       string            `json:"author" gorm:"column:author;primary_key" bson:"author" dynamodbav:"author" firestore:"author" match:"equal" validate:"max=255"`
+	Rate         int               `json:"rate" gorm:"column:rate" bson:"rate" dynamodbav:"rate" firestore:"rate" match:"equal" validate:"max=10"`
+	Review       string            `json:"review" gorm:"column:review" bson:"review" dynamodbav:"review" firestore:"review"`
+	Time         *search.TimeRange `json:"time" gorm:"column:time" bson:"time" dynamodbav:"time" firestore:"time"`
+	UsefulCount  int               `json:"usefulCount" gorm:"column:usefulCount" bson:"usefulCount" dynamodbav:"usefulCount" firestore:"usefulCount"`
+	CommentCount int               `json:"commentCount" gorm:"column:commentCount" bson:"commentCount" dynamodbav:"commentCount" firestore:"commentCount"`
 }

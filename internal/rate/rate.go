@@ -1,13 +1,55 @@
 package rate
 
-import "time"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"time"
+)
 
 type Rate struct {
-	Id         string     `mapstructure:"id" json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"id,omitempty" firestore:"-"`
-	LocationId string     `mapstructure:"locationId" json:"locationId,omitempty" gorm:"column:locationid" bson:"locationId,omitempty" dynamodbav:"locationId,omitempty" firestore:"locationId,omitempty" validate:"required,max=255"`
-	RateTime   *time.Time `mapstructure:"rateTime" json:"rateTime,omitempty" gorm:"column:ratetime" bson:"rateTime,omitempty" dynamodbav:"rateTime,omitempty" firestore:"-"`
-	UserId     string     `mapstructure:"userId" json:"userId,omitempty" gorm:"column:userId" bson:"updatedBy,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty"`
-	Rate       int32      `mapstructure:"rate" json:"rate" gorm:"column:rate" bson:"rate" dynamodbav:"rate" firestore:"rate"`
-	Version    int        `mapstructure:"version" json:"version,omitempty" gorm:"column:version" bson:"version,omitempty" dynamodbav:"version,omitempty" firestore:"version,omitempty"`
-	Review     string     `mapstructure:"review" json:"review,omitempty" gorm:"column:review" bson:"review,omitempty" dynamodbav:"review,omitempty" firestore:"review,omitempty" validate:"required,max=255" match:"prefix" q:"prefix"`
+	Id           string      `json:"id,omitempty" gorm:"column:id;primary_key" bson:"id,omitempty" dynamodbav:"id,omitempty" firestore:"id,omitempty" validate:"required,max=255"`
+	Author       string      `json:"author,omitempty" gorm:"column:author;primary_key" bson:"author,omitempty" dynamodbav:"author,omitempty" firestore:"author,omitempty" validate:"required,max=255"`
+	Rate         int         `json:"rate,omitempty" gorm:"column:rate" bson:"rate,omitempty" dynamodbav:"rate,omitempty" firestore:"rate,omitempty" validate:"required,max=10"`
+	Review       string      `json:"review,omitempty" gorm:"column:review" bson:"review,omitempty" dynamodbav:"review,omitempty" firestore:"review,omitempty"`
+	Time         *time.Time  `json:"time,omitempty" gorm:"column:time" bson:"time,omitempty" dynamodbav:"time,omitempty" firestore:"time,omitempty"`
+	UsefulCount  int         `json:"usefulCount,omitempty" gorm:"column:usefulCount" bson:"usefulCount,omitempty" dynamodbav:"usefulCount,omitempty" firestore:"usefulCount,omitempty"`
+	CommentCount int         `json:"commentCount,omitempty" gorm:"column:commentCount" bson:"commentCount,omitempty" dynamodbav:"commentCount,omitempty" firestore:"commentCount,omitempty"`
+	Histories    []Histories `json:"histories,omitempty" gorm:"column:histories" bson:"histories,omitempty" dynamodbav:"histories,omitempty" firestore:"histories,omitempty"`
+}
+
+
+type RateInfo struct {
+	Id     string  `gorm:"column:id;primary_key" validate:"required,max=255"`
+	Rate   float32 `gorm:"column:rate;"`
+	Rate1  int     `gorm:"column:rate1;"`
+	Rate2  int     `gorm:"column:rate2;"`
+	Rate3  int     `gorm:"column:rate3;"`
+	Rate4  int     `gorm:"column:rate4;"`
+	Rate5  int     `gorm:"column:rate5;"`
+	Rate6  int     `gorm:"column:rate6;"`
+	Rate7  int     `gorm:"column:rate7;"`
+	Rate8  int     `gorm:"column:rate8;"`
+	Rate9  int     `gorm:"column:rate9;"`
+	Rate10 int     `gorm:"column:rate10;"`
+	Count  int     `gorm:"column:count;"`
+	Score  int     `gorm:"column:score;"`
+}
+
+type Histories struct {
+	Time   *time.Time `json:"time,omitempty" gorm:"column:time" bson:"time,omitempty" dynamodbav:"time,omitempty" firestore:"time,omitempty" validate:"required"`
+	Rate   int        `json:"rate,omitempty" gorm:"column:rate" bson:"rate,omitempty" dynamodbav:"rate,omitempty" firestore:"rate,omitempty" validate:"required"`
+	Review string     `json:"review,omitempty" gorm:"column:review" bson:"review,omitempty" dynamodbav:"review,omitempty" firestore:"review,omitempty"`
+}
+
+func (c Histories) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Histories) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
 }

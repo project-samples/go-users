@@ -34,6 +34,12 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	user := "/users"
 	r.HandleFunc(user+"/search", app.User.Search).Methods(GET, POST)
 	r.HandleFunc(user+"/{id}", app.User.Load).Methods(GET)
+	r.HandleFunc(user+"/follow/{id}/{target}", app.Follow.Check).Methods(GET)
+	r.HandleFunc(user+"/follow/{id}/{target}", app.Follow.Follow).Methods(POST)
+	r.HandleFunc(user+"/follow/{id}/{target}", app.Follow.UnFollow).Methods(DELETE)
+	r.HandleFunc(user+"/appreciation/{id}/{author}", app.Appreciation.Check).Methods(GET)
+	r.HandleFunc(user+"/appreciation/{id}/{author}/{appreciation}", app.Appreciation.Appreciate).Methods(POST)
+	r.HandleFunc(user+"/appreciation/{id}/{author}/{appreciation}", app.Appreciation.Delete).Methods(DELETE)
 
 	r.HandleFunc("/my-profile/{id}", app.MyProfile.GetMyProfile).Methods(GET)
 	r.HandleFunc("/my-profile/{id}", app.MyProfile.SaveMyProfile).Methods(PATCH)
@@ -60,5 +66,16 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	article := "/articles"
 	r.HandleFunc(article+"/search", app.Article.Search).Methods(GET, POST)
 	r.HandleFunc(article+"/{id}", app.Article.Load).Methods(GET)
+	
+	filmRate := "/films/rates"
+	r.HandleFunc(filmRate+"/search", app.Rate.Search).Methods(GET, POST)
+	r.HandleFunc(filmRate+"/{id}/{author}", app.Rate.Rate).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", app.Reaction.Create).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", app.Reaction.Delete).Methods(DELETE)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments", app.Comment.Search).Methods(GET, POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}", app.Comment.Create).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}/{commentId}", app.Comment.Update).Methods(PUT)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}/{commentId}", app.Comment.Delete).Methods(DELETE)
+
 	return err
 }

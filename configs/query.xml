@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers">
+  <select id="user">
+    select *
+    from users
+    where
+    <if test="id != null">
+      id in (#{id}) and
+    </if>
+    <if test="interests != null" array="skip">
+      interests && #{interests} and
+    </if>
+    <if test="skills != null" separator=" or " prefix="(" suffix=") and ">
+      #{skills} <@ ANY(skills)
+    </if>
+    <if test="dateOfBirth.min != null">
+      date_of_birth >= #{dateOfBirth.min} and
+    </if>
+    <if test="dateOfBirth.max != null">
+      date_of_birth <= #{dateOfBirth.max} and
+    </if>
+    <if test="username != null">
+      username ilike #{username} and
+    </if>
+    <if test="email != null">
+      email ilike #{email} and
+    </if>
+    <if test="phone != null">
+      phone ilike #{phone} and
+    </if>
+    <if test="status != null">
+      status in (#{status}) and
+    </if>
+    <if test="q != null">
+      (username ilike #{q} or email ilike #{q}) and
+    </if>
+    1 = 1
+    <if test="sort != null">
+      order by {sort}
+    </if>
+  </select>
+
+  <select id="comment">
+    select * from gocomment
+    where
+    <if test="commentId != null">
+      commentid = #{commentId} and
+    </if>
+    <if test="id != null">
+      id = #{id} and
+    </if>
+    <if test="author != null">
+      author = #{author} and
+    </if>
+    <if test="userId != null">
+      userid = #{userId} and
+    </if>
+    <if test="time.min != null">
+      time >= #{time.min} and
+    </if>
+    <if test="time.max != null">
+      time <= #{time.max} and
+    </if>
+    <if test="comment != null">
+      comment ilike #{comment} and
+    </if>
+    1 = 1
+    <if test="sort != null">
+      order by {sort}
+    </if>
+  </select>
+
+  <select id="rate">
+    select r.*
+    <if test="userId != null">
+      ,
+      case
+        when u.type > 0 then true
+        else false
+      end
+        as disable
+    </if>   
+    from gorate r
+    <if test="userId != null">
+      left join goreaction u
+        on u.id = r.id
+        and u.author = r.author
+        and u.userid = #{userId}
+    </if> 
+    where
+    <if test="id != null">
+      r.id = #{id} and
+    </if> 
+    <if test="author != null">
+      r.author = #{author} and
+    </if> 
+    <if test="rate != null">
+      r.rate = #{rate} and
+    </if>   
+    <if test="time != null">   
+      r.time >= #{time.min} and
+    </if>  
+    <if test="time != null">   
+      r.time <= #{time.max} and
+    </if>  
+    <if test="review != null">
+      r.review ilike #{review} and
+    </if>
+    <if test="usefulCount != null">
+      r.usefulcount = #{usefulCount} and
+    </if>
+    <if test="commentCount != null">
+      r.commentcount = #{commentCount} and
+    </if>
+    1 = 1
+    <if test="sort != null">
+      order by ${sort}
+    </if>
+  </select>
+
+  <select id="item">
+    select * from item
+    where
+    <if test="id != null">
+        id = (#{id}) and
+    </if>
+    <if test="title != null">
+        title ilike #{title} and
+    </if>
+    <if test="status != null">
+        status ilike #{status} and
+    </if>
+    <if test="description != null">
+        description ilike #{description} and
+    </if>
+    <if test="brand != null">
+        brand in (#{brand}) and
+    </if>
+    <if test="price.min != null">
+        price >= (#{price.min}) and
+    </if>
+    <if test="price.max != null">
+        price <= (#{price.max}) and
+    </if>
+    <if test="categories != null" array="skip">
+        categories && #{categories} and
+    </if>
+    <if test="q != null">
+        (title ilike #{q} or description ilike #{q} and
+    </if>
+        1 = 1
+    <if test="sort != null">
+      order by ${sort}
+    </if>
+  </select>
+
+</mapper>

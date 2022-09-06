@@ -5,12 +5,15 @@ server:
 mongo:
   uri: mongodb+srv://dbUser:Demoaccount1@projectdemo.g0lah.mongodb.net
   database: user
+
 location:
   uri: mongodb+srv://dbUser:Demoaccount1@projectdemo.g0lah.mongodb.net
   database: location
+
 sql:
   driver: postgres
-  data_source_name: host=localhost port=5432 user=postgres dbname=masterdata sslmode=disable password=abcd1234
+  data_source_name: host=ec2-54-228-125-183.eu-west-1.compute.amazonaws.com port=5432 user=dqcpsquyjmmxkb dbname=d8maa489i4calm ssl.rejectUnauthorized=false password=1093639f514498fbf09e803d98714b853849704783dc052aa1ef2039c60fe6e0
+
 redis:
   url: redis://localhost:6379
 
@@ -50,6 +53,7 @@ status:
   deactivated: D
   suspended: S
   disable: E
+
 auth:
   expires: 3600
   template:
@@ -172,3 +176,19 @@ password:
       body: |
         Your user name is '%s'. This is the passcode to reset your password: %s. This passcode will expire in %s minutes.
         Tên đăng nhập của bạn là '%s'. Hãy dùng mã sau để thay đổi mật khẩu: %s. Mã này sẽ hết hạn trong %s phút.
+
+template: true
+
+log:
+  level: info
+  duration: duration
+  map:
+    time: "@timestamp"
+    msg: message
+
+middleware:
+  log: true
+  skips: /health
+  request: body
+  response: response
+  size: size
