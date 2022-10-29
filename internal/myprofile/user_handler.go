@@ -3,10 +3,12 @@ package myprofile
 import (
 	"context"
 	"encoding/json"
-	sv "github.com/core-go/core"
-	v "github.com/core-go/core/v10"
+	"go-service/internal/upload"
 	"net/http"
 	"reflect"
+
+	sv "github.com/core-go/core"
+	v "github.com/core-go/core/v10"
 )
 
 type MyProfileHandler interface {
@@ -14,18 +16,29 @@ type MyProfileHandler interface {
 	SaveMyProfile(w http.ResponseWriter, r *http.Request)
 	GetMySettings(w http.ResponseWriter, r *http.Request)
 	SaveMySettings(w http.ResponseWriter, r *http.Request)
+	upload.UploadHander
 }
 
 func NewMyProfileHandler(service UserService, logError func(context.Context, string, ...map[string]interface{}), status *sv.StatusConfig,
-		saveSkills func(ctx context.Context, values []string) (int64, error),
-		saveInterests func(ctx context.Context, values []string) (int64, error),
-		saveLookingFor func(ctx context.Context, values []string) (int64, error)) MyProfileHandler {
+	saveSkills func(ctx context.Context, values []string) (int64, error),
+	saveInterests func(ctx context.Context, values []string) (int64, error),
+	saveLookingFor func(ctx context.Context, values []string) (int64, error),
+	saveEducation func(ctx context.Context, values []string) (int64, error),
+	saveCompany func(ctx context.Context, values []string) (int64, error),
+	saveWork func(ctx context.Context, values []string) (int64, error),
+	uploadService upload.UploadService,
+	keyFile string,
+	generate func(ctx context.Context) (string, error)) MyProfileHandler {
 	var user User
 	userType := reflect.TypeOf(user)
 	keys, indexes, _ := sv.BuildMapField(userType)
 	validator := v.NewValidator()
 	s := sv.InitializeStatus(status)
-	return &myProfileHandler{service: service, Validate: validator.Validate, LogError: logError, Keys: keys, Indexes: indexes, Status: s, SaveSkills: saveSkills, SaveInterests: saveInterests, SaveLookingFor: saveLookingFor}
+	UploadHandler := upload.NewUploadHandler(uploadService, logError, status, keyFile, generate)
+	return &myProfileHandler{service: service, Validate: validator.Validate, LogError: logError,
+		Keys: keys, Indexes: indexes, Status: s, SaveSkills: saveSkills, SaveInterests: saveInterests,
+		SaveLookingFor: saveLookingFor, SaveEducations: saveEducation, SaveCompanys: saveCompany, SaveWorks: saveWork,
+		UploadHandler: UploadHandler}
 }
 
 type myProfileHandler struct {
@@ -38,6 +51,10 @@ type myProfileHandler struct {
 	SaveSkills     func(ctx context.Context, values []string) (int64, error)
 	SaveInterests  func(ctx context.Context, values []string) (int64, error)
 	SaveLookingFor func(ctx context.Context, values []string) (int64, error)
+	SaveEducations func(ctx context.Context, values []string) (int64, error)
+	SaveCompanys   func(ctx context.Context, values []string) (int64, error)
+	SaveWorks      func(ctx context.Context, values []string) (int64, error)
+	UploadHandler  upload.UploadHander
 }
 
 func (h *myProfileHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +76,27 @@ func (h *myProfileHandler) SaveMyProfile(w http.ResponseWriter, r *http.Request)
 					skills = append(skills, s.Skill)
 				}
 				h.SaveSkills(r.Context(), skills)
+			}
+			if h.SaveCompanys != nil && len(user.Companies) > 0 {
+				company := make([]string, 0)
+				for _, s := range user.Companies {
+					company = append(company, s.Name)
+				}
+				h.SaveCompanys(r.Context(), company)
+			}
+			if h.SaveEducations != nil && len(user.Educations) > 0 {
+				education := make([]string, 0)
+				for _, s := range user.Educations {
+					education = append(education, s.School)
+				}
+				h.SaveEducations(r.Context(), education)
+			}
+			if h.SaveWorks != nil && len(user.Works) > 0 {
+				work := make([]string, 0)
+				for _, s := range user.Works {
+					work = append(work, s.Position)
+				}
+				h.SaveWorks(r.Context(), work)
 			}
 			if h.SaveInterests != nil && len(user.Interests) > 0 {
 				h.SaveInterests(r.Context(), user.Interests)
@@ -90,4 +128,27 @@ func (h *myProfileHandler) SaveMySettings(w http.ResponseWriter, r *http.Request
 		res, err := h.service.SaveMySettings(r.Context(), id, &settings)
 		sv.RespondModel(w, r, res, err, h.LogError, nil)
 	}
+}
+
+func (u *myProfileHandler) GetGallery(w http.ResponseWriter, r *http.Request) {
+	u.UploadHandler.GetGallery(w, r)
+}
+
+func (u *myProfileHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
+	u.UploadHandler.UploadImage(w, r)
+}
+
+func (u *myProfileHandler) UploadGallery(w http.ResponseWriter, r *http.Request) {
+	u.UploadHandler.UploadGallery(w, r)
+}
+
+func (u *myProfileHandler) UploadCover(w http.ResponseWriter, r *http.Request) {
+	u.UploadHandler.UploadCover(w, r)
+}
+
+func (u *myProfileHandler) DeleteGalleryFile(w http.ResponseWriter, r *http.Request) {
+	u.UploadHandler.DeleteGalleryFile(w, r)
+}
+func (u *myProfileHandler) UpdateGallery(w http.ResponseWriter, r *http.Request) {
+	u.UploadHandler.UpdateGallery(w, r)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
 )
 
 type AppreciationService interface {
@@ -16,44 +15,44 @@ type AppreciationService interface {
 func NewAppreciationService(
 	db *sql.DB,
 	appreciationTable string,
-	id string,
-	author string,
-	reaction string,
+	idCol string,
+	authorCol string,
+	reactionCol string,
 	prefix string,
 	suffix string,
 	userInfoTable string,
-	infoId string,
-	reactionCount string,
+	infoIdCol string,
+	reactionCountCol string,
 ) AppreciationService {
 	return &appreciationService{
 		DB:                db,
 		AppreciationTable: appreciationTable,
-		Id:                id,
-		Author:            author,
-		Reaction:          reaction,
+		IdCol:             idCol,
+		AuthorCol:         authorCol,
+		ReactionCol:       reactionCol,
 		Prefix:            prefix,
 		Suffix:            suffix,
 		UserInfoTable:     userInfoTable,
-		InfoId:            infoId,
-		ReactionCount:     reactionCount,
+		InfoIdCol:         infoIdCol,
+		ReactionCountCol:  reactionCountCol,
 	}
 }
 
 type appreciationService struct {
 	DB                *sql.DB
 	AppreciationTable string
-	Id                string
-	Author            string
-	Reaction          string
+	IdCol             string
+	AuthorCol         string
+	ReactionCol       string
 	Prefix            string
 	Suffix            string
 	UserInfoTable     string
-	InfoId            string
-	ReactionCount     string
+	InfoIdCol         string
+	ReactionCountCol  string
 }
 
 func (s *appreciationService) Check(ctx context.Context, id string, author string) (*Appreciation, error) {
-	query := "select id, author, reaction from " + s.AppreciationTable + " where id = $1 and author = $2 limit 1"
+	query := fmt.Sprintf("select id, author, reaction from %s where id = $1 and author = $2 limit 1", s.AppreciationTable)
 	fmt.Println(query)
 	rows, err := s.DB.QueryContext(ctx, query, id, author)
 	if err != nil {
@@ -73,29 +72,30 @@ func (s *appreciationService) Check(ctx context.Context, id string, author strin
 
 func (s *appreciationService) Appreciate(ctx context.Context, appreciation *Appreciation) (int64, error) {
 	var query2 string
-	reaction := strconv.Itoa(appreciation.Reaction)
 	oldAppreciation, _ := s.Check(ctx, appreciation.Id, appreciation.Author)
-	if oldAppreciation != nil {	
-		oldReaction := strconv.Itoa(oldAppreciation.Reaction)
-		query2 = "insert into " + s.UserInfoTable + "(" + s.InfoId + "," + s.ReactionCount + "," + s.Prefix + reaction + s.Suffix + ") values ($1, 1, 1) " +
-		"on conflict (" + s.InfoId + ") do update set " + s.Prefix + oldReaction + s.Suffix + " = " + s.UserInfoTable  + "." + s.Prefix + oldReaction + s.Suffix + " - 1, " + s.Prefix + reaction + s.Suffix + " = " + s.UserInfoTable  + "." + s.Prefix + reaction + s.Suffix + " + 1;"
+	if oldAppreciation != nil {
+		query2 = fmt.Sprintf(
+			"insert into %s(%s, %s, %s%d%s) values ($1, 1, 1) on conflict (%s) do update set %s%d%s = %s.%s%d%s - 1, %s%d%s = %s.%s%d%s + 1;",
+			s.UserInfoTable, s.InfoIdCol, s.ReactionCountCol, s.Prefix, appreciation.Reaction, s.Suffix,
+			s.InfoIdCol, s.Prefix, oldAppreciation.Reaction, s.Suffix, s.UserInfoTable, s.Prefix, appreciation.Reaction, s.Suffix,
+			s.Prefix, appreciation.Reaction, s.Suffix, s.UserInfoTable, s.Prefix, appreciation.Reaction, s.Suffix)
 	} else {
-		query2 = "insert into " + s.UserInfoTable + "(" + s.InfoId + "," + s.ReactionCount + "," + s.Prefix + reaction + s.Suffix + ") values ($1, 1, 1) " +
-		"on conflict (" + s.InfoId + ") do update set " + s.ReactionCount + " = " + s.UserInfoTable + "." + s.ReactionCount + " + 1, " + s.Prefix + reaction + s.Suffix + " = " + s.UserInfoTable  + "." + s.Prefix + reaction + s.Suffix + " + 1;"
+		query2 = fmt.Sprintf(
+			"insert into %s(%s,%s,%s%d%s) values ($1, 1, 1) on conflict (%s) do update set %s = %s.%s + 1, %s%d%s = %s.%s%d%s + 1;",
+			s.UserInfoTable, s.InfoIdCol, s.ReactionCountCol, s.Prefix, appreciation.Reaction, s.Suffix,
+			s.InfoIdCol, s.ReactionCountCol, s.UserInfoTable, s.ReactionCountCol,
+			s.Prefix, appreciation.Reaction, s.Suffix, s.UserInfoTable, s.Prefix, appreciation.Reaction, s.Suffix)
 	}
 
-	query1 := "insert into " + s.AppreciationTable + "(" + s.Id + "," + s.Author + "," + s.Reaction + ") values ($1, $2, $3)" +
-		"on conflict ("+ s.Id + "," + s.Author +") do update set " + s.Reaction + " = $3"
+	query1 := fmt.Sprintf(
+		"insert into %s(%s, %s, %s) values ($1, $2, $3) on conflict (%s, %s) do update set %s = $3",
+		s.AppreciationTable, s.IdCol, s.AuthorCol, s.ReactionCol, s.IdCol, s.AuthorCol, s.ReactionCol)
 	fmt.Println(query1)
 	stmt1, er0 := s.DB.Prepare(query1)
 	if er0 != nil {
 		return -1, nil
 	}
-	res1, er1 := stmt1.ExecContext(ctx, appreciation.Id, appreciation.Author, appreciation.Reaction)
-	if er1 != nil {
-		return -1, er1
-	}
-	fmt.Println(res1)
+	stmt1.ExecContext(ctx, appreciation.Id, appreciation.Author, appreciation.Reaction)
 
 	fmt.Println(query2)
 	stmt2, er0 := s.DB.Prepare(query2)
@@ -108,23 +108,21 @@ func (s *appreciationService) Appreciate(ctx context.Context, appreciation *Appr
 	}
 	fmt.Println(res2)
 
-	return res1.RowsAffected()
+	return res2.RowsAffected()
 }
 
 func (s *appreciationService) Delete(ctx context.Context, id string, author string, reaction string) (int64, error) {
-	query1 := "delete from " + s.AppreciationTable + " where " + s.Id + " = $1 and " + s.Author + " = $2"
+	query1 := fmt.Sprintf("delete from %s where %s = $1 and %s = $2", s.AppreciationTable, s.IdCol, s.AuthorCol)
 	fmt.Println(query1)
 	stmt1, er0 := s.DB.Prepare(query1)
 	if er0 != nil {
 		return -1, nil
 	}
-	res1, er1 := stmt1.ExecContext(ctx, id, author)
-	if er1 != nil {
-		return -1, er1
-	}
-	fmt.Println(res1)
+	stmt1.ExecContext(ctx, id, author)
 
-	query2 := "update " + s.UserInfoTable + " set " + s.ReactionCount + " = " + s.ReactionCount + " - 1," + s.Prefix + reaction + s.Suffix + " = " + s.Prefix + reaction + s.Suffix + " - 1 where " + s.Id + " = $1;"
+	query2 := fmt.Sprintf(
+		"update %s set %s = %s - 1, %s%s%s = %s%s%s - 1 where %s = $1;",
+		s.UserInfoTable, s.ReactionCountCol, s.ReactionCountCol, s.Prefix, reaction, s.Suffix, s.Prefix, reaction, s.Suffix, s.IdCol)
 	fmt.Println(query2)
 	stmt2, er0 := s.DB.Prepare(query2)
 	if er0 != nil {
@@ -134,7 +132,6 @@ func (s *appreciationService) Delete(ctx context.Context, id string, author stri
 	if er2 != nil {
 		return -1, er2
 	}
-	fmt.Println(res2)
 
-	return res1.RowsAffected()
+	return res2.RowsAffected()
 }

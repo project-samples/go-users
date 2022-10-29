@@ -8,16 +8,143 @@ import (
 )
 
 type User struct {
-	UserId       string        `json:"userId,omitempty" gorm:"column:userid;primary_key" bson:"_id,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty" validate:"required,max=40"`
-	Username     string        `json:"username,omitempty" gorm:"column:username" bson:"username,omitempty" dynamodbav:"username,omitempty" firestore:"username,omitempty" validate:"required,username,max=100"`
-	Email        string        `json:"email,omitempty" gorm:"column:email" bson:"email,omitempty" dynamodbav:"email,omitempty" firestore:"email,omitempty" validate:"email,max=100"`
-	Phone        string        `json:"phone,omitempty" gorm:"column:phone" bson:"phone,omitempty" dynamodbav:"phone,omitempty" firestore:"phone,omitempty" validate:"required,phone,max=18"`
-	Bio          string        `json:"bio,omitempty" gorm:"column:bio" bson:"bio,omitempty" dynamodbav:"bio,omitempty" firestore:"bio,omitempty" validate:"max=500"`
-	DateOfBirth  *time.Time    `json:"dateOfBirth,omitempty" gorm:"column:date_of_birth" bson:"dateOfBirth,omitempty" dynamodbav:"dateOfBirth,omitempty" firestore:"dateOfBirth,omitempty"`
-	Interests    []string      `json:"interests,omitempty" gorm:"column:interests" bson:"interests,omitempty" dynamodbav:"interests,omitempty" firestore:"interests,omitempty"`
-	Skills       []Skills      `json:"skills,omitempty" gorm:"column:skills" bson:"skills,omitempty" dynamodbav:"skills,omitempty" firestore:"skills,omitempty"`
-	Achievements []Achievement `json:"achievements,omitempty" gorm:"column:achievements" bson:"achievements,omitempty" dynamodbav:"achievements,omitempty" firestore:"achievements,omitempty"`
-	Settings     *Settings     `json:"settings,omitempty" gorm:"column:settings" bson:"settings,omitempty" dynamodbav:"settings,omitempty" firestore:"settings,omitempty"`
+	Id       *string `json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"id,omitempty" firestore:"id,omitempty" validate:"required,max=40"`
+	Username *string `json:"username,omitempty" gorm:"column:username" bson:"username,omitempty" dynamodbav:"username,omitempty" firestore:"username,omitempty" validate:"required,username,max=100"`
+	Email    *string `json:"email,omitempty" gorm:"column:email" bson:"email,omitempty" dynamodbav:"email,omitempty" firestore:"email,omitempty" validate:"email,max=100"`
+	Phone    *string `json:"phone,omitempty" gorm:"column:phone" bson:"phone,omitempty" dynamodbav:"phone,omitempty" firestore:"phone,omitempty" validate:"required,phone,max=18"`
+	// Bio          string        `json:"bio,omitempty" gorm:"column:bio" bson:"bio,omitempty" dynamodbav:"bio,omitempty" firestore:"bio,omitempty" validate:"max=500"`
+	DateOfBirth *time.Time    `json:"dateOfBirth,omitempty" gorm:"column:date_of_birth" bson:"dateOfBirth,omitempty" dynamodbav:"dateOfBirth,omitempty" firestore:"dateOfBirth,omitempty"`
+	Links       *Socials      `json:"social,omitempty" gorm:"column:links"`
+	Works       []Work        `json:"works,omitempty" gorm:"column:works"`
+	Companies   []Company     `json:"companies,omitempty" gorm:"column:companies"`
+	Educations  []Education   `json:"educations,omiempty" gorm:"column:educations"`
+	Info        *Info10       `json:"info,omitempty" gorm:"-"`
+	ImageURL    *string       `json:"imageURL,omitempty" gorm:"column:imageurl"`
+	CoverURL    *string       `json:"coverURL,omitempty" gorm:"column:coverurl"`
+	Gallery     []UploadImage `json:"gallery,omitempty" gorm:"column:gallery"`
+	Bio         *string       `json:"bio,omitempty" gorm:"column:bio"`
+	// Interests    []string      `json:"interests,omitempty" gorm:"column:interests" bson:"interests,omitempty" dynamodbav:"interests,omitempty" firestore:"interests,omitempty"`
+	// Skills       []Skills      `json:"skills,omitempty" gorm:"column:skills" bson:"skills,omitempty" dynamodbav:"skills,omitempty" firestore:"skills,omitempty"`
+	// Achievements []Achievement `json:"achievements,omitempty" gorm:"column:achievements" bson:"achievements,omitempty" dynamodbav:"achievements,omitempty" firestore:"achievements,omitempty"`
+	// Settings     *Settings     `json:"settings,omitempty" gorm:"column:settings" bson:"settings,omitempty" dynamodbav:"settings,omitempty" firestore:"settings,omitempty"`
+}
+type UploadImage struct {
+	Source string `json:"source,omitempty" gorm:"column:source"`
+	Type   string `json:"type,omitempty" gorm:"column:type"`
+	Url    string `json:"url,omitempty" gorm:"column:url"`
+}
+
+func (c UploadImage) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *UploadImage) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
+}
+
+type Info10 struct {
+	Id     string  `json:"id" gorm:"column:id"`
+	Rate   float32 `json:"rate" gorm:"column:rate"`
+	Rate1  float32 `json:"rate1" gorm:"column:rate1"`
+	Rate2  float32 `json:"rate2" gorm:"column:rate2"`
+	Rate3  float32 `json:"rate3" gorm:"column:rate3"`
+	Rate4  float32 `json:"rate4" gorm:"column:rate4"`
+	Rate5  float32 `json:"rate5" gorm:"column:rate5"`
+	Rate6  float32 `json:"rate6" gorm:"column:rate6"`
+	Rate7  float32 `json:"rate7" gorm:"column:rate7"`
+	Rate8  float32 `json:"rate8" gorm:"column:rate8"`
+	Rate9  float32 `json:"rate9" gorm:"column:rate9"`
+	Rate10 float32 `json:"rate10" gorm:"column:rate10"`
+	Count  int     `json:"count" gorm:"column:count"`
+	Score  int     `json:"score" gorm:"column:score"`
+}
+type Education struct {
+	School string    `json:"school,omitempty" gorm:"column:school" `
+	Degree string    `json:"degree,omitempty" gorm:"column:degree"`
+	Major  string    `json:"major,omitempty" gorm:"column:major"`
+	Title  string    `json:"title,omitempty" gorm:"column:title"`
+	From   time.Time `json:"from,omitempty" gorm:"column:from"`
+	To     time.Time `json:"to,omitempty" gorm:"column:to"`
+}
+
+func (c Education) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Education) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
+}
+
+type Company struct {
+	Id          *string   `json:"id" gorm:"column:id"`
+	Name        string    `json:"name" gorm:"column:name"`
+	Description string    `json:"description" gorm:"column:description"`
+	From        time.Time `json:"from" gorm:"column:from"`
+	To          time.Time `json:"to" gorm:"column:to"`
+}
+
+func (c Company) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Company) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
+}
+
+type Work struct {
+	Name        string     `json:"name,omitempty" gorm:"column:name"`
+	Position    string     `json:"position,omitempty" gorm:"column:position"`
+	Description string     `json:"description,omitempty" gorm:"column:description"`
+	Item        []string   `json:"item,omitempty" gorm:"column:item"`
+	From        *time.Time `json:"from,omitempty" gorm:"column:from"`
+	To          *time.Time `json:"to,omitempty" gorm:"column:to"`
+}
+
+func (c Work) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Work) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
+}
+
+type Socials struct {
+	Google    string `json:"google,omitempty" gorm:"column:google"`
+	Facebook  string `json:"facebook,omitempty" gorm:"column:facebook"`
+	Github    string `json:"github,omitempty" gorm:"column:github"`
+	Instagram string `json:"instagram,omitempty" gorm:"column:instagram"`
+	Twitter   string `json:"twitter,omitempty" gorm:"column:twitter"`
+	Skype     string `json:"skype,omitempty" gorm:"column:skype"`
+	Dribble   string `json:"dribble,omitempty" gorm:"column:dribble"`
+	Linkedin  string `json:"linkedin,omitempty" gorm:"column:linkedin"`
+}
+
+func (c Socials) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Socials) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
 }
 
 type Skills struct {

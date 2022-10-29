@@ -1,7 +1,9 @@
 package location
 
 import (
-	"github.com/core-go/mongo/geo"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -15,13 +17,13 @@ type Location struct {
 	CustomURL   string        `mapstructure:"custom_url" json:"customURL,omitempty" gorm:"column:customurl" bson:"customURL,omitempty" dynamodbav:"customURL,omitempty" firestore:"customURL,omitempty"`
 	Latitude    *float64      `mapstructure:"latitude" json:"latitude,omitempty" gorm:"column:latitude" bson:"-" dynamodbav:"latitude,omitempty" firestore:"latitude,omitempty"`
 	Longitude   *float64      `mapstructure:"longitude" json:"longitude,omitempty" gorm:"column:longitude" bson:"-" dynamodbav:"longitude,omitempty" firestore:"longitude,omitempty"`
-	Geo         *geo.JSON     `mapstructure:"geo" json:"-" bson:"geo,omitempty" gorm:"-" dynamodbav:"-" firestore:"-"`
+	Geo         *Geo          `mapstructure:"geo" json:"-" bson:"geo,omitempty" gorm:"-" dynamodbav:"-" firestore:"-"`
 	Info        *LocationInfo `mapstructure:"info" json:"info,omitempty" bson:"-" gorm:"column:info" dynamodbav:"info,omitempty" firestore:"info,omitempty"`
-	CreatedBy   string        `mapstructure:"created_by" json:"createdBy,omitempty" gorm:"column:createdby" bson:"createdBy,omitempty" dynamodbav:"createdBy,omitempty" firestore:"createdBy,omitempty"`
+	CreatedBy   *string       `mapstructure:"created_by" json:"createdBy,omitempty" gorm:"column:createdby" bson:"createdBy,omitempty" dynamodbav:"createdBy,omitempty" firestore:"createdBy,omitempty"`
 	CreatedAt   *time.Time    `mapstructure:"created_at" json:"createdAt,omitempty" gorm:"column:createdat" bson:"createdAt,omitempty" dynamodbav:"createdAt,omitempty" firestore:"-"`
-	UpdatedBy   string        `mapstructure:"updated_by" json:"updatedBy,omitempty" gorm:"column:updatedby" bson:"updatedBy,omitempty" dynamodbav:"updatedBy,omitempty" firestore:"updatedBy,omitempty"`
+	UpdatedBy   *string       `mapstructure:"updated_by" json:"updatedBy,omitempty" gorm:"column:updatedby" bson:"updatedBy,omitempty" dynamodbav:"updatedBy,omitempty" firestore:"updatedBy,omitempty"`
 	UpdatedAt   *time.Time    `mapstructure:"updated_at" json:"updatedAt,omitempty" gorm:"column:updatedat" bson:"updatedAt,omitempty" dynamodbav:"updatedAt,omitempty" firestore:"-"`
-	Version     int           `mapstructure:"version" json:"version,omitempty" gorm:"column:version" bson:"version,omitempty" dynamodbav:"version,omitempty" firestore:"version,omitempty"`
+	Version     *int          `mapstructure:"version" json:"version,omitempty" gorm:"column:version" bson:"version,omitempty" dynamodbav:"version,omitempty" firestore:"version,omitempty"`
 }
 type LocationInfo struct {
 	Id           string  `json:"-"  gorm:"column:id;primary_key" bson:"_id" dynamodbav:"id" firestore:"id"`
@@ -41,4 +43,20 @@ type LocationRate struct {
 	Rate       int32      `mapstructure:"rate" json:"rate" gorm:"column:rate" bson:"rate" dynamodbav:"rate" firestore:"rate"`
 	Version    int        `mapstructure:"version" json:"version,omitempty" gorm:"column:version" bson:"version,omitempty" dynamodbav:"version,omitempty" firestore:"version,omitempty"`
 	Review     string     `mapstructure:"review" json:"review,omitempty" gorm:"column:review" bson:"review,omitempty" dynamodbav:"review,omitempty" firestore:"review,omitempty" validate:"required,max=255" match:"prefix" q:"prefix"`
+}
+type Geo struct {
+	Type        string    `json:"type,omitempty" bson:"type,omitempty"`
+	Coordinates []float64 `json:"coordinates,omitempty" bson:"coordinates,omitempty"`
+}
+
+func (c *Geo) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Geo) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
 }

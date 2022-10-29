@@ -5,6 +5,7 @@ import (
 	. "github.com/core-go/auth/mail"
 	as "github.com/core-go/auth/sql"
 	sv "github.com/core-go/core"
+
 	"github.com/core-go/core/builder"
 	. "github.com/core-go/mail/smtp"
 	"github.com/core-go/mongo"
@@ -13,14 +14,15 @@ import (
 	"github.com/core-go/redis"
 	. "github.com/core-go/signup/mail"
 	"github.com/core-go/sql"
+	"github.com/core-go/storage"
 )
 
 type Config struct {
-	Server   ServerConfig      `mapstructure:"server"`
-	Mongo    mongo.MongoConfig `mapstructure:"mongo"`
-	Location mongo.MongoConfig `mapstructure:"location"`
-	Sql      sql.Config        `mapstructure:"sql"`
-	Redis    redis.Config      `mapstructure:"redis"`
+	Server ServerConfig      `mapstructure:"server"`
+	Mongo  mongo.MongoConfig `mapstructure:"mongo"`
+	// Location mongo.MongoConfig `mapstructure:"location"`
+	Sql   sql.Config   `mapstructure:"sql"`
+	Redis redis.Config `mapstructure:"redis"`
 
 	MaxPasswordFailed     int                           `mapstructure:"max_password_failed"`
 	LockedMinutes         int                           `mapstructure:"locked_minutes"`
@@ -38,10 +40,15 @@ type Config struct {
 	Mail                  MailConfig                    `mapstructure:"mail"`
 	CallBackURL           CallbackURL                   `mapstructure:"callback_url"`
 
-	Tracking    builder.TrackingConfig `mapstructure:"action"`
-	Template    bool                   `mapstructure:"template"`
-	ModelStatus *sv.StatusConfig       `mapstructure:"model_status"`
-	Action      *sv.ActionConfig       `mapstructure:"action"`
+	Tracking          builder.TrackingConfig `mapstructure:"action"`
+	Template          bool                   `mapstructure:"template"`
+	ModelStatus       *sv.StatusConfig       `mapstructure:"model_status"`
+	Action            *sv.ActionConfig       `mapstructure:"action"`
+	Provider          string                 `mapstructure:"provider"`
+	GeneralDirectory  string                 `mapstructure:"general_directory"`
+	GoogleCredentials string                 `mapstructure:"google_credentials"`
+	Storage           storage.Config         `mapstructure:"google_storage"`
+	KeyFile           string                 `mapstructure:"key_file"`
 }
 
 type ServerConfig struct {
