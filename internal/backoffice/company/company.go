@@ -1,8 +1,9 @@
 package company
 
 import (
-	"go-service/internal/upload"
 	"time"
+
+	"github.com/core-go/storage/upload"
 )
 
 type Company struct {

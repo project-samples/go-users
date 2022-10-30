@@ -3,9 +3,11 @@ package myprofile
 import (
 	"context"
 	"encoding/json"
-	"go-service/internal/upload"
 	"net/http"
 	"reflect"
+
+	"github.com/core-go/storage"
+	"github.com/core-go/storage/upload"
 
 	sv "github.com/core-go/core"
 	v "github.com/core-go/core/v10"
@@ -16,7 +18,7 @@ type MyProfileHandler interface {
 	SaveMyProfile(w http.ResponseWriter, r *http.Request)
 	GetMySettings(w http.ResponseWriter, r *http.Request)
 	SaveMySettings(w http.ResponseWriter, r *http.Request)
-	upload.UploadHander
+	storage.UploadHandler
 }
 
 func NewMyProfileHandler(service UserService, logError func(context.Context, string, ...map[string]interface{}), status *sv.StatusConfig,
@@ -26,7 +28,7 @@ func NewMyProfileHandler(service UserService, logError func(context.Context, str
 	saveEducation func(ctx context.Context, values []string) (int64, error),
 	saveCompany func(ctx context.Context, values []string) (int64, error),
 	saveWork func(ctx context.Context, values []string) (int64, error),
-	uploadService upload.UploadService,
+	uploadService upload.UploadManager,
 	keyFile string,
 	generate func(ctx context.Context) (string, error)) MyProfileHandler {
 	var user User
@@ -34,7 +36,7 @@ func NewMyProfileHandler(service UserService, logError func(context.Context, str
 	keys, indexes, _ := sv.BuildMapField(userType)
 	validator := v.NewValidator()
 	s := sv.InitializeStatus(status)
-	UploadHandler := upload.NewUploadHandler(uploadService, logError, status, keyFile, generate)
+	UploadHandler := upload.NewHandler(uploadService, logError, keyFile, generate)
 	return &myProfileHandler{service: service, Validate: validator.Validate, LogError: logError,
 		Keys: keys, Indexes: indexes, Status: s, SaveSkills: saveSkills, SaveInterests: saveInterests,
 		SaveLookingFor: saveLookingFor, SaveEducations: saveEducation, SaveCompanys: saveCompany, SaveWorks: saveWork,
@@ -54,7 +56,7 @@ type myProfileHandler struct {
 	SaveEducations func(ctx context.Context, values []string) (int64, error)
 	SaveCompanys   func(ctx context.Context, values []string) (int64, error)
 	SaveWorks      func(ctx context.Context, values []string) (int64, error)
-	UploadHandler  upload.UploadHander
+	UploadHandler  storage.UploadHandler
 }
 
 func (h *myProfileHandler) GetMyProfile(w http.ResponseWriter, r *http.Request) {

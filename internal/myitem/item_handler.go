@@ -2,9 +2,11 @@ package myitem
 
 import (
 	"context"
-	"go-service/internal/upload"
 	"net/http"
 	"reflect"
+
+	"github.com/core-go/storage"
+	"github.com/core-go/storage/upload"
 
 	sv "github.com/core-go/core"
 	"github.com/core-go/search"
@@ -31,7 +33,7 @@ func NewMyItemHandler(
 	logError func(context.Context, string, ...map[string]interface{}),
 	validate func(ctx context.Context, model interface{}) ([]sv.ErrorMessage, error),
 	action *sv.ActionConfig,
-	uploadService upload.UploadService,
+	uploadService upload.UploadManager,
 	keyFile string,
 	generate func(ctx context.Context) (string, error),
 
@@ -40,7 +42,7 @@ func NewMyItemHandler(
 	modelType := reflect.TypeOf(Item{})
 	params := sv.CreateParams(modelType, &status, logError, validate, action)
 	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, params.Log)
-	UploadHandler := upload.NewUploadHandler(uploadService, logError, &status, keyFile, generate)
+	UploadHandler := upload.NewHandler(uploadService, logError, keyFile, generate)
 	return &itemHandler{service: service, SearchHandler: searchHandler, Params: params, UploadHandler: UploadHandler}
 }
 
@@ -48,7 +50,7 @@ type itemHandler struct {
 	service ItemService
 	*search.SearchHandler
 	*sv.Params
-	UploadHandler upload.UploadHander
+	UploadHandler storage.UploadHandler
 }
 
 func (h *itemHandler) Load(w http.ResponseWriter, r *http.Request) {

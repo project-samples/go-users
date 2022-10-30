@@ -4,7 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"go-service/internal/upload"
+
+	"github.com/core-go/storage/upload"
 )
 
 type Room struct {

@@ -4,8 +4,9 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"go-service/internal/upload"
 	"time"
+
+	"github.com/core-go/storage/upload"
 )
 
 type Cinema struct {

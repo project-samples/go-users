@@ -3,9 +3,11 @@ package company
 import (
 	"context"
 	"fmt"
-	"go-service/internal/upload"
 	"net/http"
 	"reflect"
+
+	"github.com/core-go/storage"
+	"github.com/core-go/storage/upload"
 
 	"github.com/core-go/core"
 	"github.com/core-go/search"
@@ -18,7 +20,7 @@ type BackofficeCompanyHandler interface {
 	Update(w http.ResponseWriter, r *http.Request)
 	Patch(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
-	upload.UploadHander
+	storage.UploadHandler
 }
 
 func NewBackofficeCompanyHandler(
@@ -29,7 +31,7 @@ func NewBackofficeCompanyHandler(
 	Validate func(context.Context, interface{}) ([]core.ErrorMessage, error),
 	status core.StatusConfig,
 	action core.ActionConfig,
-	uploadService upload.UploadService,
+	uploadService upload.UploadManager,
 	keyFile string,
 	generate func(ctx context.Context) (string, error),
 
@@ -39,7 +41,7 @@ func NewBackofficeCompanyHandler(
 	searchHandler := search.NewSearchHandler(Find, modelType, searchType, Error, Log)
 	params := core.CreateParams(modelType, &status, Error, Validate, &action)
 
-	UploadHandler := upload.NewUploadHandler(uploadService, Error, &status, keyFile, generate)
+	UploadHandler := upload.NewHandler(uploadService, Error, keyFile, generate)
 	return &backofficeCompanyHandler{
 		service:       service,
 		SearchHandler: searchHandler,
@@ -52,7 +54,7 @@ type backofficeCompanyHandler struct {
 	service BackofficeCompanyService
 	*search.SearchHandler
 	*core.Params
-	UploadHandler upload.UploadHander
+	UploadHandler storage.UploadHandler
 }
 
 // Delete implements BackofficeCompanyHandler

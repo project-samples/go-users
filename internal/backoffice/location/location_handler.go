@@ -3,9 +3,11 @@ package bolocation
 import (
 	"context"
 	"fmt"
-	"go-service/internal/upload"
 	"net/http"
 	"reflect"
+
+	"github.com/core-go/storage"
+	"github.com/core-go/storage/upload"
 
 	sv "github.com/core-go/core"
 	"github.com/core-go/search"
@@ -18,7 +20,7 @@ type BackOfficeLocationHandler interface {
 	Update(w http.ResponseWriter, r *http.Request)
 	Patch(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
-	upload.UploadHander
+	storage.UploadHandler
 }
 
 func NewBackOfficeLocationHandler(
@@ -29,7 +31,7 @@ func NewBackOfficeLocationHandler(
 	status sv.StatusConfig,
 	action sv.ActionConfig,
 	validate func(context.Context, interface{}) ([]sv.ErrorMessage, error),
-	uploadService upload.UploadService,
+	uploadService upload.UploadManager,
 	keyFile string,
 	generate func(ctx context.Context) (string, error),
 ) BackOfficeLocationHandler {
@@ -37,7 +39,7 @@ func NewBackOfficeLocationHandler(
 	modelType := reflect.TypeOf(Location{})
 	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
 	params := sv.CreateParams(modelType, &status, logError, validate, &action)
-	UploadHandler := upload.NewUploadHandler(uploadService, logError, &status, keyFile, generate)
+	UploadHandler := upload.NewHandler(uploadService, logError, keyFile, generate)
 	return &backOfficeLocationHandler{service: service,
 		SearchHandler: searchHandler,
 		Error:         logError,
@@ -53,7 +55,7 @@ type backOfficeLocationHandler struct {
 	*search.SearchHandler
 	Error         func(context.Context, string, ...map[string]interface{})
 	Log           func(context.Context, string, string, bool, string) error
-	UploadHandler upload.UploadHander
+	UploadHandler storage.UploadHandler
 }
 
 func (h *backOfficeLocationHandler) Delete(w http.ResponseWriter, r *http.Request) {

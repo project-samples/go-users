@@ -61,7 +61,7 @@ type uploadHander struct {
 	LogError func(context.Context, string, ...map[string]interface{})
 
 	Status sv.StatusConfig
-	// uploadHandler    upload.UploadService
+	// uploadHandler    upload.UploadManager
 	// Provider         string
 	// GeneralDirectory string
 	// Directory        string

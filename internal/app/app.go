@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 
+	bofilm "go-service/internal/backoffice/film"
+
 	. "github.com/core-go/auth"
 	am "github.com/core-go/auth/mongo"
 	sv "github.com/core-go/core"
@@ -48,7 +50,6 @@ import (
 	"github.com/core-go/storage/google"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
-	bofilm "go-service/internal/backoffice/film"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -76,9 +77,10 @@ import (
 	"go-service/internal/room"
 	"go-service/internal/saveditem"
 	"go-service/internal/savedlocation"
-	"go-service/internal/upload"
 	"go-service/internal/user"
 	"go-service/internal/userinfomation"
+
+	"github.com/core-go/storage/upload"
 )
 
 type ApplicationContext struct {
@@ -344,10 +346,14 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	productionHandler := q.NewQueryHandler(productionService.Load, log.LogError)
 	countryService := q.NewStringService(db, "filmcasts", "actor")
 	countryHander := q.NewQueryHandler(countryService.Load, log.LogError)
+	Cover := "coverurl"
+	Image := "imageurl"
+	Gallery := "gallery"
 	myprofileType := reflect.TypeOf(myprofile.User{})
 	myProfileRepository, _ := s.NewRepositoryWithArray(db, "users", myprofileType, pq.Array)
-	uploadService := upload.NewUploadService(db, "users", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "coverurl", "imageurl", "gallery")
+	uploadProfileRepository := upload.NewRepository(db, "users", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
+	uploadService := upload.NewUploadService(uploadProfileRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 	myProfileService := myprofile.NewUserService(myProfileRepository)
 	myProfileHandler := myprofile.NewMyProfileHandler(myProfileService, log.LogError, nil, skillService.Save, interestService.Save, lookingForService.Save,
 		educationService.Save, companiesService.Save, workService.Save, uploadService, conf.KeyFile, generateId)
@@ -622,8 +628,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	itemUploadService := upload.NewUploadService(db, "item", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "", "imageurl", "gallery")
+	uploadItemRepository := upload.NewRepository(db, "item", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
+
+	itemUploadService := upload.NewUploadService(uploadItemRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 	myItemService := myitem.NewMyItemService(myItemRepository)
 	myItemHandler := myitem.NewMyItemHandler(myItemSearchBuilder.Search, myItemService, modelStatus,
 		log.LogError, validator.Validate, &action, itemUploadService, conf.KeyFile, generateId)
@@ -761,9 +769,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	boCinemaUploadService := upload.NewUploadService(db, "cinema", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "coverurl", "imageurl", "gallery")
+	uploadBOCinemaRepository := upload.NewRepository(db, "cinema", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
 
+	boCinemaUploadService := upload.NewUploadService(uploadBOCinemaRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 	boCinemaService := bocinema.NewCinemaService(boCinemaRepository)
 	boCinemaHandler := bocinema.NewBackOfficeCinemaHandler(boCinemaSearchBuilder.Search, nil,
 		boCinemaService, log.LogError, validator.Validate, modelStatus, action, boCinemaUploadService, conf.KeyFile, generateId)
@@ -835,9 +844,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	filmBOUploadService := upload.NewUploadService(db, "film", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "coverurl", "imageurl", "gallery")
+	filmBOUploadRepository := upload.NewRepository(db, "film", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
 
+	filmBOUploadService := upload.NewUploadService(filmBOUploadRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 	boFilmService := bofilm.NewBackOfficeFilmService(boFilmRepository)
 	boFilmHandler := bofilm.NewBackOfficeFilmHandler(bofilmSearchBuilder.Search, boFilmService, validator.Validate, log.LogError,
 		nil, directorService.Save, castService.Save, productionService.Save, countryService.Save, modelStatus, &action, nil, conf.Tracking, filmBOUploadService, conf.KeyFile, generateId)
@@ -892,8 +902,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	boCompanyUploadService := upload.NewUploadService(db, "company", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "coverurl", "imageurl", "gallery")
+	boCompanyUploadRepository := upload.NewRepository(db, "company", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
+
+	boCompanyUploadService := upload.NewUploadService(boCompanyUploadRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 
 	boCompanyHandler := bocompany.NewBackofficeCompanyHandler(bocompanySearchBuilder.Search, boCompanyService, log.LogError, nil, validator.Validate, modelStatus, action, boCompanyUploadService, conf.KeyFile, generateId)
 
@@ -964,8 +976,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	boLocationUploadService := upload.NewUploadService(db, "location", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "coverurl", "imageurl", "gallery")
+	boLocationUploadRepository := upload.NewRepository(db, "item", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
+
+	boLocationUploadService := upload.NewUploadService(boLocationUploadRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 
 	boLocationHandler := bolocation.NewBackOfficeLocationHandler(bolocationSearchBuilder.Search, boLocationService, log.LogError, nil, modelStatus, action, validator.Validate, boLocationUploadService, conf.KeyFile, generateId)
 	healthHandler := NewHandler(
@@ -975,9 +989,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	boRoomUploadService := upload.NewUploadService(db, "room", pq.Array, cloudService, conf.Provider, conf.GeneralDirectory,
-		conf.KeyFile, conf.Storage.Directory, []int{}, []int{}, "id", "coverurl", "imageurl", "gallery")
+	boRoomUploadRepository := upload.NewRepository(db, "item", "", upload.UploadFieldColumn{Image: &Image, Cover: &Cover, Gallery: &Gallery, Id: "id"}, pq.Array)
 
+	boRoomUploadService := upload.NewUploadService(boRoomUploadRepository, cloudService, conf.Provider, conf.GeneralDirectory,
+		conf.KeyFile, conf.Storage.Directory, []int{}, []int{})
 	boRoomService := boroom.NewBackOfficeRoomService(boRoomRepository)
 	boRoomHandler := boroom.NewBackofficeRoomHandler(boRoomSearchBuilder.Search, boRoomService, log.LogError, nil, validator.Validate, modelStatus, action, boRoomUploadService, conf.KeyFile, generateId)
 

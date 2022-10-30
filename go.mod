@@ -19,7 +19,7 @@ require (
 	github.com/core-go/security v0.1.0
 	github.com/core-go/signup v0.1.4
 	github.com/core-go/sql v0.3.6
-	github.com/core-go/storage v0.0.8
+	github.com/core-go/storage v0.0.11
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.4
 	github.com/rs/cors v1.8.0

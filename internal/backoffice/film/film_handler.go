@@ -3,9 +3,11 @@ package film
 import (
 	"context"
 	"fmt"
-	"go-service/internal/upload"
 	"net/http"
 	"reflect"
+
+	"github.com/core-go/storage"
+	"github.com/core-go/storage/upload"
 
 	"github.com/core-go/core"
 	"github.com/core-go/core/builder"
@@ -19,7 +21,7 @@ type BackOfficeFilmHandler interface {
 	Update(w http.ResponseWriter, r *http.Request)
 	Patch(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
-	upload.UploadHander
+	storage.UploadHandler
 }
 
 func NewBackOfficeFilmHandler(
@@ -36,7 +38,7 @@ func NewBackOfficeFilmHandler(
 	action *core.ActionConfig,
 	generateId func(context.Context) (string, error),
 	tracking builder.TrackingConfig,
-	uploadService upload.UploadService,
+	uploadService upload.UploadManager,
 	keyFile string,
 	generate func(ctx context.Context) (string, error),
 
@@ -45,7 +47,7 @@ func NewBackOfficeFilmHandler(
 	modelType := reflect.TypeOf(Film{})
 	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
 	params := core.CreateParams(modelType, &status, logError, validate, action)
-	UploadHandler := upload.NewUploadHandler(uploadService, logError, &status, keyFile, generate)
+	UploadHandler := upload.NewHandler(uploadService, logError, keyFile, generate)
 
 	return &backOfficeFilmHandler{service: service,
 		SearchHandler: searchHandler,
@@ -73,7 +75,7 @@ type backOfficeFilmHandler struct {
 	SaveProductions func(context.Context, []string) (int64, error)
 	SaveCountries   func(context.Context, []string) (int64, error)
 	*core.Params
-	UploadHandler upload.UploadHander
+	UploadHandler storage.UploadHandler
 }
 
 func (h *backOfficeFilmHandler) Load(w http.ResponseWriter, r *http.Request) {
