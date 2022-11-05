@@ -11,7 +11,7 @@ require (
 	github.com/core-go/mail v0.0.0
 	github.com/core-go/mongo v0.3.1
 	github.com/core-go/oauth2 v0.1.3
-	github.com/core-go/password v0.1.2
+	github.com/core-go/password v0.1.3
 	github.com/core-go/rate v0.0.1
 	github.com/core-go/reaction v0.0.1
 	github.com/core-go/redis v0.0.1

@@ -21,7 +21,7 @@ import (
 	. "github.com/core-go/oauth2"
 	om "github.com/core-go/oauth2/mongo"
 	. "github.com/core-go/password"
-	pm "github.com/core-go/password/mongo"
+	sqlpm "github.com/core-go/password/sql"
 	"github.com/core-go/rate"
 	"github.com/core-go/rate/criteria"
 	searchrate "github.com/core-go/rate/search"
@@ -222,15 +222,17 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	authenticationHandler := NewAuthenticationHandler(authenticator.Authenticate, status.Error, status.Timeout, logError)
 	signOutHandler := NewSignOutHandler(tokenService.VerifyToken, conf.Token.Secret, tokenBlacklistChecker.Revoke, logError)
 
-	passwordResetCode := "passwordResetCode"
-	passwordRepository := pm.NewPasswordRepositoryByConfig(mongoDb, userCollection, authentication, userCollection, "userId", conf.Password.Schema)
-	passResetCodeRepository := mgo.NewPasscodeRepository(mongoDb, passwordResetCode)
+	passwordResetCode := "passwordcodes"
+	//passwordRepository := pm.NewPasswordRepositoryByConfig(mongoDb, userCollection, authentication, userCollection, "userId", conf.Password.Schema)
+	//passResetCodeRepository := mgo.NewPasscodeRepository(mongoDb, passwordResetCode)
+	passwordRepositorySQL := sqlpm.NewPasswordRepositoryByConfig(db, "users", "passwords", "history", "id", conf.Password.Schema, 5, pq.Array)
+	passResetCodeRepositorySQL := sqlgo.NewPasscodeService(db, passwordResetCode, "expiredat", "id", "code")
 	p := conf.Password
 	exps := []string{p.Exp1, p.Exp2, p.Exp3, p.Exp4, p.Exp5, p.Exp6}
 	signupSender := NewVerifiedEmailSender(mailService, *conf.SignUp.UserVerified, conf.Mail.From, NewTemplateLoaderByConfig(*conf.SignUp.Template))
 	passwordResetSender := NewPasscodeSender(mailService, conf.Mail.From, NewTemplateLoaderByConfig(conf.Password.Template.ResetTemplate))
 	passwordChangeSender := NewPasscodeSender(mailService, conf.Mail.From, NewTemplateLoaderByConfig(conf.Password.Template.ChangeTemplate))
-	passwordService := NewPasswordService(bcryptComparator, passwordRepository, conf.Password.ResetExpires, passResetCodeRepository, passwordResetSender.Send, tokenBlacklistChecker.RevokeAllTokens, exps, 5, nil, conf.Password.ChangeExpires, passResetCodeRepository, passwordChangeSender.Send)
+	passwordService := NewPasswordService(bcryptComparator, passwordRepositorySQL, conf.Password.ResetExpires, passResetCodeRepositorySQL, passwordResetSender.Send, tokenBlacklistChecker.RevokeAllTokens, exps, 5, nil, conf.Password.ChangeExpires, passResetCodeRepositorySQL, passwordChangeSender.Send)
 	passwordHandler := NewPasswordHandler(passwordService, log.LogError, nil)
 
 	signUpCode := "signupCodes"

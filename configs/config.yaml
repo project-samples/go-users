@@ -184,14 +184,11 @@ password:
   change_expires: 420
   reset_expires: 420
   schema:
-    user_id: userId
+    user_id: id
     user_name: userName
     to_address: email
     password: password
-    changed_time: passwordModifiedTime
-    fail_count: failCount
-    changed_by: changedBy
-    timestamp: timestamp
+    faild_count: failCount
     history: history
   template:
     reset:
