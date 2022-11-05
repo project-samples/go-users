@@ -4,7 +4,7 @@ import "github.com/core-go/search"
 
 type ItemFilter struct {
 	*search.Filter
-	Id          string              `json:"id" gorm:"column:id;primary_key" bson:"_id" dynamodbav:"id" firestore:"id"`
+	Id          string              `json:"id" gorm:"column:id;primary_key" bson:"_id" dynamodbav:"id" firestore:"id" match:"equal"`
 	Title       string              `json:"title" gorm:"column:title" bson:"title" dynamodbav:"title" firestore:"title"`
 	Author      *string             `json:"author,omitempty" gorm:"column:author" bson:"column:author" dynamodbav:"column:author,omitempty" firestore:"author,omitempty" validate:"required,max=255"`
 	Description string              `json:"description" gorm:"column:description" bson:"description" dynamodbav:"description" firestore:"description"`

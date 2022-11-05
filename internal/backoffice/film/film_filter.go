@@ -4,7 +4,7 @@ import "github.com/core-go/search"
 
 type FilmFilter struct {
 	*search.Filter
-	Id          string   `json:"id" gorm:"primary_key,column:id" validate:"max=40"`
+	Id          string   `json:"id" gorm:"column:id;primary_key" validate:"max=40" match:"equal"`
 	Title       string   `json:"title" gorm:"column:title" validate:"required,max=300" q:"true"`
 	Description string   `json:"description,omitempty" gorm:"column:description" validate:"omitempty,max=300"`
 	TrailerUrl  string   `json:"trailerurl,omitempty" gorm:"column:trailerurl" validate:"max=300"`

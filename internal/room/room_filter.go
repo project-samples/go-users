@@ -6,7 +6,7 @@ import (
 
 type RoomFilter struct {
 	*search.Filter
-	Id          string             `json:"id,omitempty" gorm:"column:id;primary_key" validate:"max=40"`
+	Id          string             `json:"id,omitempty" gorm:"column:id;primary_key" validate:"max=40" match:"equal"`
 	Title       string             `json:"title,omitempty" gorm:"column:title" validate:"max=120"`
 	Description string             `json:"description,omitempty" gorm:"column:description" validate:"max=1000"`
 	Offer       []string           `json:"offer,omitempty" gorm:"column:offer"`

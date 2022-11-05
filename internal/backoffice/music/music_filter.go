@@ -1,13 +1,14 @@
 package music
 
 import (
-	"github.com/core-go/search"
 	"time"
+
+	"github.com/core-go/search"
 )
 
 type MusicFilter struct {
 	*search.Filter
-	Id          string           `json:"id,omitempty" gorm:"primary_key;column:id" dynamodbav:"id,omitempty" firestore:"id,omitempty" validate:"max=40"`
+	Id          string           `json:"id,omitempty" gorm:"primary_key;column:id" dynamodbav:"id,omitempty" firestore:"id,omitempty" validate:"max=40" match:"equal"`
 	Name        string           `json:"name,omitempty" gorm:"column:name" dynamodbav:"name,omitempty" firestore:"name,omitempty" validate:"omitempty,max=300"`
 	Author      []string         `json:"author,omitempty" gorm:"column:author" dynamodbav:"author,omitempty" firestore:"author,omitempty"`
 	ReleaseDate *time.Time       `json:"releaseDate,omitempty" gorm:"column:releaseDate" dynamodbav:"releaseDate,omitempty" firestore:"releaseDate,omitempty"`

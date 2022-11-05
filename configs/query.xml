@@ -261,7 +261,7 @@
     select * from film
     where
     <if test="id != null">
-    id = #{id} and
+    id = (#{id}) and
     </if>
     <if test="title != null">
     title ilike #{title} and

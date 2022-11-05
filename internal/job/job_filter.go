@@ -1,13 +1,14 @@
 package job
 
 import (
-	"github.com/core-go/search"
 	"time"
+
+	"github.com/core-go/search"
 )
 
 type JobFilter struct {
 	*search.Filter
-	Id             string     `json:"id,omitempty" gorm:"primary_key;column:id" dynamodbav:"id,omitempty" firestore:"id,omitempty" validate:"max=40"`
+	Id             string     `json:"id,omitempty" gorm:"primary_key;column:id" dynamodbav:"id,omitempty" firestore:"id,omitempty" validate:"max=40" match:"equal"`
 	Title          string     `json:"title,omitempty" gorm:"column:title" dynamodbav:"title,omitempty" firestore:"title,omitempty" validate:"omitempty,max=120"`
 	Description    string     `json:"description,omitempty" gorm:"column:description" dynamodbav:"description,omitempty" firestore:"description,omitempty" validate:"omitempty,max=1000"`
 	Skill          []string   `json:"skill,omitempty" gorm:"column:skill" dynamodbav:"skill,omitempty" firestore:"skill,omitempty"`

@@ -22,16 +22,16 @@ import (
 	om "github.com/core-go/oauth2/mongo"
 	. "github.com/core-go/password"
 	pm "github.com/core-go/password/mongo"
-	"github.com/core-go/rate/rate"
-	"github.com/core-go/rate/ratecriteria"
-	"github.com/core-go/rate/searchrate"
+	"github.com/core-go/rate"
+	"github.com/core-go/rate/criteria"
+	searchrate "github.com/core-go/rate/search"
+	"github.com/core-go/reaction"
 	"github.com/core-go/reaction/comment"
+	searchcomment "github.com/core-go/reaction/comment/search"
 	"github.com/core-go/reaction/follow"
-	"github.com/core-go/reaction/reaction"
 	"github.com/core-go/reaction/response"
+	searchresponse "github.com/core-go/reaction/response/response"
 	"github.com/core-go/reaction/save"
-	"github.com/core-go/reaction/searchcomment"
-	"github.com/core-go/reaction/searchresponse"
 	"github.com/core-go/reaction/userreaction"
 	"github.com/core-go/redis"
 	"github.com/core-go/search/convert"
@@ -104,11 +104,11 @@ type ApplicationContext struct {
 	Production            *q.QueryHandler
 	Location              location.LocationHandler
 	LocationRate          rate.RateHandler
-	SearchLocationRate    searchrate.SearchRateHandler
+	SearchLocationRate    searchrate.RateSearchHandler
 	MyArticles            myarticles.ArticleHandler
 	Article               article.ArticleHandler
 	ArticleRate           rate.RateHandler
-	ArticleRateSearch     searchrate.SearchRateHandler
+	ArticleRateSearch     searchrate.RateSearchHandler
 	ArticleRateReaction   reaction.ReactionHandler
 	Appreciation          appreciation.AppreciationHandler
 	Follow                follow.FollowHandler
@@ -117,14 +117,14 @@ type ApplicationContext struct {
 	Reaction              reaction.ReactionHandler
 	Rate                  rate.RateHandler
 	Response              response.ResponseHandler
-	SearchRate            searchrate.SearchRateHandler
+	SearchRate            searchrate.RateSearchHandler
 	SearchResponse        searchresponse.SearchResponseHandler
 	SearchComment         searchcomment.SearchCommentHandler
 	CinemaComment         comment.CommentHandler
 	CinemaReaction        reaction.ReactionHandler
 	CinemaRate            rate.RateHandler
 	CinemaResponse        response.ResponseHandler
-	CinemaSearchRate      searchrate.SearchRateHandler
+	CinemaSearchRate      searchrate.RateSearchHandler
 	CinemaSearchResponse  searchresponse.SearchResponseHandler
 	CinemaSearchComment   searchcomment.SearchCommentHandler
 	Item                  item.ItemHandler
@@ -149,7 +149,7 @@ type ApplicationContext struct {
 	ArticleComment        comment.CommentHandler
 	SearchArticleComment  searchcomment.SearchCommentHandler
 	Cinema                cinema.CinemaHandler
-	SearchCompanyRate     searchrate.SearchRateHandler
+	SearchCompanyRate     searchrate.RateSearchHandler
 	SearchCompanyComment  searchcomment.SearchCommentHandler
 	Job                   job.JobHandler
 	Room                  room.RoomHandler
@@ -158,12 +158,12 @@ type ApplicationContext struct {
 	BackofficeRoom        boroom.BackofficeRoomHandler
 	BackofficeMusic       bomusic.BackofficeMusicHandler
 	BackofficeJob         bojob.BackofficeJobHandler
-	CompanyRate           ratecriteria.RateCriteriaHandler
+	CompanyRate           criteria.RateCriteriaHandler
 	CompanyReaction       reaction.ReactionHandler
 	CompanyComment        comment.CommentHandler
 	UserReact             userreaction.UserReactionHandler
 	UserInfomation        userinfomation.UserInfomationHandler
-	SearchUserRate        searchrate.SearchRateHandler
+	SearchUserRate        searchrate.RateSearchHandler
 	SearchUserRateComment searchcomment.SearchCommentHandler
 	UserRate              rate.RateHandler
 	UserRateReaction      reaction.ReactionHandler
@@ -307,7 +307,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	userRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, userRateType, searchUserRateQuery, pq.Array)
-	searchUserRateHandler := searchrate.NewSearchRateHandler(userRateSearchBuilder.Search, log.LogError)
+	searchUserRateHandler := searchrate.NewRateSearchHandler(userRateSearchBuilder.Search, log.LogError)
 	// user rate comment
 	userRateCommentService := comment.NewCommentService(db, "userratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
 		"userrate", "id", "author", "replycount", pq.Array)
@@ -397,7 +397,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchLocationRateHandler := searchrate.NewSearchRateHandler(locationRateSearchBuilder.Search, log.LogError)
+	searchLocationRateHandler := searchrate.NewRateSearchHandler(locationRateSearchBuilder.Search, log.LogError)
 
 	// locationRateService := locationrate.NewLocationRateService(db)
 	locationRateService := rate.NewRateService(db, "locationrate", "id", "author", "rate", "review", "ratetime", "usefulcount", "replycount", "locationinfo", "id", "rate", "count", "score", pq.Array)
@@ -502,7 +502,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	articleRateType := reflect.TypeOf(rate.Rate{})
 	articleRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlerate", templates, &articleRateType, convert.ToMap, buildParam, pq.Array)
 	articleRateSearchBuilder, err := s.NewSearchBuilder(db, articleRateType, articleRateQuery)
-	articleRateSearchHandler := searchrate.NewSearchRateHandler(articleRateSearchBuilder.Search, log.LogError)
+	articleRateSearchHandler := searchrate.NewRateSearchHandler(articleRateSearchBuilder.Search, log.LogError)
 
 	articleRateReactionService := reaction.NewReactionService(db, "articleratereaction", "id", "author", "userid", "time", "reaction", "articlerate", "id", "author", "usefulcount")
 	articleRateReactionHandler := reaction.NewReactionHandler(articleRateReactionService, modelStatus, log.LogError, validator.Validate, &action)
@@ -580,7 +580,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchRateHandler := searchrate.NewSearchRateHandler(rateSearchBuilder.Search, log.LogError)
+	searchRateHandler := searchrate.NewRateSearchHandler(rateSearchBuilder.Search, log.LogError)
 
 	// Item
 	itemType := reflect.TypeOf(item.Item{})
@@ -826,7 +826,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchCinemaRateHandler := searchrate.NewSearchRateHandler(cinemaRateSearchBuilder.Search, log.LogError)
+	searchCinemaRateHandler := searchrate.NewRateSearchHandler(cinemaRateSearchBuilder.Search, log.LogError)
 
 	/////////////
 	// Backoffice - Film
@@ -913,10 +913,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// companyRateService := rate.NewRateService(db, "companyrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
 	// 	"companyratefullinfo", "id", "rate", "count", "score", pq.Array)
 	// companyRateHandler := rate.NewRateHandler(companyRateService, modelStatus, log.LogError, validator.Validate, &action)
-	companyRateService := ratecriteria.NewRateCriteriaService(db, 5,
+	companyRateService := criteria.NewRateCriteriaService(db, 5,
 		"companyrate", "id", "rate", "rates", "review", "author", "time", "usefulcount", "replycount",
 		"companyratefullinfo", "id", "score", "count", "rate", []string{"companyrateinfo01", "companyrateinfo02", "companyrateinfo03", "companyrateinfo04", "companyrateinfo05"}, "id", "rate", "count", "score")
-	companyRateHandler := ratecriteria.NewRateCriteriaHandler(companyRateService, modelStatus, log.LogError, validator.Validate, &action)
+	companyRateHandler := criteria.NewRateCriteriaHandler(companyRateService, modelStatus, log.LogError, validator.Validate, &action)
 
 	companyReactionService := reaction.NewReactionService(db, "companyratereaction", "id", "author", "userid", "time", "reaction",
 		"companyrate", "id", "author", "usefulcount")
@@ -934,7 +934,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchCompanyRateHandler := searchrate.NewSearchRateCriteriaHandler(companyRateSearchBuilder.Search, log.LogError)
+	searchCompanyRateHandler := searchrate.NewRateCriteriaSearchHandler(companyRateSearchBuilder.Search, log.LogError)
 
 	// SearchComment Company
 	companyCommentType := reflect.TypeOf(searchcomment.Comment{})

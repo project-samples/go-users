@@ -787,7 +787,7 @@ create table articlecomment(
   author varchar(255),
   userid varchar(255),
   comment text,
-  parent varchar(255),
+  parent varchar(40),
   time timestamp with time zone,
   updatedat timestamp with time zone,
   histories jsonb[]
@@ -797,4 +797,13 @@ create table articlecommentthreadinfo(
 commentId varchar(40) primary key,
 replycount int default 0,
 usefulcount int default 0
+);
+
+create table articlecommentthreadreaction(
+  id varchar(40),
+  author varchar(40),
+  userid varchar(40),
+  time timestamp with time zone,
+  reaction smallint,
+  primary key(id,author,userid) 
 );
