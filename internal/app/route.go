@@ -24,9 +24,9 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc("/signup/signup", app.SignUp.SignUp).Methods(POST)
 	r.HandleFunc("/signup/verify/{userId}/{code}", app.SignUp.VerifyUser).Methods(GET)
 
-	r.HandleFunc("/oauth2/configurations/{type}", app.OAuth2.Configuration).Methods(GET)
-	r.HandleFunc("/oauth2/configurations", app.OAuth2.Configurations).Methods(GET)
-	r.HandleFunc("/oauth2/authenticate", app.OAuth2.Authenticate).Methods(POST)
+	//r.HandleFunc("/oauth2/configurations/{type}", app.OAuth2.Configuration).Methods(GET)
+	//r.HandleFunc("/oauth2/configurations", app.OAuth2.Configurations).Methods(GET)
+	//r.HandleFunc("/oauth2/authenticate", app.OAuth2.Authenticate).Methods(POST)
 
 	r.HandleFunc("/skills", app.Skill.Query).Methods(GET)
 	r.HandleFunc("/interests", app.Interest.Query).Methods(GET)
