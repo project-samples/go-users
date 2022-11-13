@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	bofilm "go-service/internal/backoffice/film"
+	"go-service/internal/commentthread"
 
 	. "github.com/core-go/auth"
 	am "github.com/core-go/auth/mongo"
@@ -146,28 +147,29 @@ type ApplicationContext struct {
 	SearchLocationComment searchcomment.SearchCommentHandler
 	BackofficeLocation    bolocation.BackOfficeLocationHandler
 
-	ArticleComment        comment.CommentHandler
-	SearchArticleComment  searchcomment.SearchCommentHandler
-	Cinema                cinema.CinemaHandler
-	SearchCompanyRate     searchrate.RateSearchHandler
-	SearchCompanyComment  searchcomment.SearchCommentHandler
-	Job                   job.JobHandler
-	Room                  room.RoomHandler
-	Music                 music.MusicHandler
-	Playlist              playlist.PlaylistHandler
-	BackofficeRoom        boroom.BackofficeRoomHandler
-	BackofficeMusic       bomusic.BackofficeMusicHandler
-	BackofficeJob         bojob.BackofficeJobHandler
-	CompanyRate           criteria.RateCriteriaHandler
-	CompanyReaction       reaction.ReactionHandler
-	CompanyComment        comment.CommentHandler
-	UserReact             userreaction.UserReactionHandler
-	UserInfomation        userinfomation.UserInfomationHandler
-	SearchUserRate        searchrate.RateSearchHandler
-	SearchUserRateComment searchcomment.SearchCommentHandler
-	UserRate              rate.RateHandler
-	UserRateReaction      reaction.ReactionHandler
-	UserRateComment       comment.CommentHandler
+	ArticleComment              comment.CommentHandler
+	SearchArticleComment        searchcomment.SearchCommentHandler
+	Cinema                      cinema.CinemaHandler
+	SearchCompanyRate           searchrate.RateSearchHandler
+	SearchCompanyComment        searchcomment.SearchCommentHandler
+	Job                         job.JobHandler
+	Room                        room.RoomHandler
+	Music                       music.MusicHandler
+	Playlist                    playlist.PlaylistHandler
+	BackofficeRoom              boroom.BackofficeRoomHandler
+	BackofficeMusic             bomusic.BackofficeMusicHandler
+	BackofficeJob               bojob.BackofficeJobHandler
+	CompanyRate                 criteria.RateCriteriaHandler
+	CompanyReaction             reaction.ReactionHandler
+	CompanyComment              comment.CommentHandler
+	UserReact                   userreaction.UserReactionHandler
+	UserInfomation              userinfomation.UserInfomationHandler
+	SearchUserRate              searchrate.RateSearchHandler
+	SearchUserRateComment       searchcomment.SearchCommentHandler
+	UserRate                    rate.RateHandler
+	UserRateReaction            reaction.ReactionHandler
+	UserRateComment             comment.CommentHandler
+	ArticleCommentThreadHandler commentthread.CommentThreadHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
@@ -300,7 +302,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	userRateService := rate.NewRateService(db, "userrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
 		"userrateinfo", "id", "rate", "count", "score", pq.Array)
 
-	userRateHandler := rate.NewRateHandler(userRateService, modelStatus, log.LogError, validator.Validate, &action)
+	userRateHandler := rate.NewRateHandler(userRateService, modelStatus, log.LogError, validator.Validate, &action, 2, 1)
 
 	// search user rate
 	userRateType := reflect.TypeOf(searchrate.Rate{})
@@ -508,6 +510,19 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	articleRateReactionService := reaction.NewReactionService(db, "articleratereaction", "id", "author", "userid", "time", "reaction", "articlerate", "id", "author", "usefulcount")
 	articleRateReactionHandler := reaction.NewReactionHandler(articleRateReactionService, modelStatus, log.LogError, validator.Validate, &action)
+
+	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userId", "updatedat",
+		"articlecomment", "commentId", "articlecommentthreadInfo", "commentId", "articlecommentinfo", "commentId", "reaction", "commentId", "articlecommentreaction", "commentId")
+	articleCommentThreadType := reflect.TypeOf(commentthread.CommentThread{})
+	articleCommentThreadQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlecommentthread", templates, &articleCommentThreadType, convert.ToMap, buildParam, pq.Array)
+	if err != nil {
+		return nil, err
+	}
+	articleCommentThreadSearchBuilder, err := s.NewSearchBuilder(db, articleCommentThreadType, articleCommentThreadQuery)
+	if err != nil {
+		return nil, err
+	}
+	articleCommentThreadHandler := commentthread.NewCommentThreadHandler(articleCommentThreadService, articleCommentThreadSearchBuilder.Search, log.LogError, nil, generateId, validator.Validate, modelStatus, action)
 	// Follow
 	followService := follow.NewFollowService(
 		db,
@@ -1033,89 +1048,90 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	bomusicHandler := bomusic.NewBackofficeMusicHandler(bomusicSearchBuilder.Search, bomusicService, log.LogError, nil, validator.Validate, modelStatus, action)
 
 	app := ApplicationContext{
-		Health:                healthHandler,
-		Authentication:        authenticationHandler,
-		SignOut:               signOutHandler,
-		Password:              passwordHandler,
-		SignUp:                signupHandler,
-		OAuth2:                oauth2Handler,
-		User:                  userHandler,
-		MyProfile:             myProfileHandler,
-		Skill:                 skillHandler,
-		Interest:              interestHandler,
-		LookingFor:            lookingForHandler,
-		Education:             educationHandler,
-		Companies:             companiesHandler,
-		Work:                  workHandler,
-		Location:              locationHandler,
-		LocationRate:          locationRateHandler,
-		MyArticles:            myarticlesHandler,
-		Article:               articleHandler,
-		Appreciation:          appreciationHandler,
-		Follow:                followHandler,
-		Comment:               commentHandler,
-		Reaction:              reactionHandler,
-		Rate:                  rateHandler,
-		SearchRate:            searchRateHandler,
-		Response:              responseHandler,
-		SearchResponse:        searchResponseHandler,
-		SearchComment:         searchCommentHandler,
-		CinemaComment:         cinemaCommentHandler,
-		CinemaReaction:        cinemaReactionHandler,
-		CinemaRate:            cinemaRateHandler,
-		CinemaSearchRate:      searchCinemaRateHandler,
-		CinemaResponse:        responseHandler,
-		CinemaSearchResponse:  searchResponseHandler,
-		CinemaSearchComment:   searchCinemaCommentHandler,
-		Item:                  itemHandler,
-		MyItem:                myItemHandler,
-		Film:                  filmHandler,
-		Company:               companyHandler,
-		BackofficeCinema:      boCinemaHandler,
-		FilmCategory:          filmCategoryHandler,
-		CompanyCategory:       companyCategoryHandler,
-		ItemCategory:          itemCategoryHandler,
-		SavedFilm:             savedfilmHandler,
-		BackofficeFilm:        boFilmHandler,
-		Director:              directorHandler,
-		Cast:                  castHandler,
-		Country:               countryHander,
-		Production:            productionHandler,
-		BackofficeCompany:     boCompanyHandler,
-		Savedlocation:         locationSaveHandler,
-		FollowLocation:        locationFollowHandler,
-		LocationInfomation:    locationInfomationHandler,
-		SearchLocationRate:    searchLocationRateHandler,
-		LocationReaction:      locationReactionHandler,
-		LocationComment:       locationCommentHandler,
-		SearchLocationComment: searchLocationCommentHandler,
-		Job:                   jobHandler,
-		Room:                  roomHandler,
-		Music:                 musicHandler,
-		Playlist:              playlistHandler,
-		BackofficeRoom:        boRoomHandler,
-		BackofficeMusic:       bomusicHandler,
-		BackofficeJob:         boJobHandler,
-		BackofficeLocation:    boLocationHandler,
-		ArticleRate:           articleRateHandler,
-		ArticleRateSearch:     articleRateSearchHandler,
-		ArticleRateReaction:   articleRateReactionHandler,
-		ArticleComment:        articleCommentHandler,
-		SearchArticleComment:  searchArticleRateCommentHandler,
-		Cinema:                cinemaHandler,
-		SavedItem:             savedItemHandler,
-		CompanyRate:           companyRateHandler,
-		SearchCompanyRate:     searchCompanyRateHandler,
-		SearchCompanyComment:  searchCompanyCommentHandler,
-		CompanyReaction:       companyReactionHandler,
-		CompanyComment:        companyCommentHandler,
-		UserReact:             userReactHandler,
-		UserInfomation:        userInfomationHandler,
-		SearchUserRate:        searchUserRateHandler,
-		SearchUserRateComment: searchUserRateCommentHandler,
-		UserRate:              userRateHandler,
-		UserRateReaction:      userRateReactionHandler,
-		UserRateComment:       userRateCommentHandler,
+		Health:                      healthHandler,
+		Authentication:              authenticationHandler,
+		SignOut:                     signOutHandler,
+		Password:                    passwordHandler,
+		SignUp:                      signupHandler,
+		OAuth2:                      oauth2Handler,
+		User:                        userHandler,
+		MyProfile:                   myProfileHandler,
+		Skill:                       skillHandler,
+		Interest:                    interestHandler,
+		LookingFor:                  lookingForHandler,
+		Education:                   educationHandler,
+		Companies:                   companiesHandler,
+		Work:                        workHandler,
+		Location:                    locationHandler,
+		LocationRate:                locationRateHandler,
+		MyArticles:                  myarticlesHandler,
+		Article:                     articleHandler,
+		Appreciation:                appreciationHandler,
+		Follow:                      followHandler,
+		Comment:                     commentHandler,
+		Reaction:                    reactionHandler,
+		Rate:                        rateHandler,
+		SearchRate:                  searchRateHandler,
+		Response:                    responseHandler,
+		SearchResponse:              searchResponseHandler,
+		SearchComment:               searchCommentHandler,
+		CinemaComment:               cinemaCommentHandler,
+		CinemaReaction:              cinemaReactionHandler,
+		CinemaRate:                  cinemaRateHandler,
+		CinemaSearchRate:            searchCinemaRateHandler,
+		CinemaResponse:              responseHandler,
+		CinemaSearchResponse:        searchResponseHandler,
+		CinemaSearchComment:         searchCinemaCommentHandler,
+		Item:                        itemHandler,
+		MyItem:                      myItemHandler,
+		Film:                        filmHandler,
+		Company:                     companyHandler,
+		BackofficeCinema:            boCinemaHandler,
+		FilmCategory:                filmCategoryHandler,
+		CompanyCategory:             companyCategoryHandler,
+		ItemCategory:                itemCategoryHandler,
+		SavedFilm:                   savedfilmHandler,
+		BackofficeFilm:              boFilmHandler,
+		Director:                    directorHandler,
+		Cast:                        castHandler,
+		Country:                     countryHander,
+		Production:                  productionHandler,
+		BackofficeCompany:           boCompanyHandler,
+		Savedlocation:               locationSaveHandler,
+		FollowLocation:              locationFollowHandler,
+		LocationInfomation:          locationInfomationHandler,
+		SearchLocationRate:          searchLocationRateHandler,
+		LocationReaction:            locationReactionHandler,
+		LocationComment:             locationCommentHandler,
+		SearchLocationComment:       searchLocationCommentHandler,
+		Job:                         jobHandler,
+		Room:                        roomHandler,
+		Music:                       musicHandler,
+		Playlist:                    playlistHandler,
+		BackofficeRoom:              boRoomHandler,
+		BackofficeMusic:             bomusicHandler,
+		BackofficeJob:               boJobHandler,
+		BackofficeLocation:          boLocationHandler,
+		ArticleRate:                 articleRateHandler,
+		ArticleRateSearch:           articleRateSearchHandler,
+		ArticleRateReaction:         articleRateReactionHandler,
+		ArticleComment:              articleCommentHandler,
+		SearchArticleComment:        searchArticleRateCommentHandler,
+		Cinema:                      cinemaHandler,
+		SavedItem:                   savedItemHandler,
+		CompanyRate:                 companyRateHandler,
+		SearchCompanyRate:           searchCompanyRateHandler,
+		SearchCompanyComment:        searchCompanyCommentHandler,
+		CompanyReaction:             companyReactionHandler,
+		CompanyComment:              companyCommentHandler,
+		UserReact:                   userReactHandler,
+		UserInfomation:              userInfomationHandler,
+		SearchUserRate:              searchUserRateHandler,
+		SearchUserRateComment:       searchUserRateCommentHandler,
+		UserRate:                    userRateHandler,
+		UserRateReaction:            userRateReactionHandler,
+		UserRateComment:             userRateCommentHandler,
+		ArticleCommentThreadHandler: articleCommentThreadHandler,
 	}
 	return &app, nil
 }

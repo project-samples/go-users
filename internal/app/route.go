@@ -117,6 +117,10 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(articlerate+"/{id}/{author}/comments/{userId}/{commentId}", app.ArticleComment.Update).Methods(PUT)
 	r.HandleFunc(articlerate+"/{id}/{author}/comments/{commentId}", app.ArticleComment.Delete).Methods(DELETE)
 
+	articlecommentthread := "/articles/commentthread"
+	r.HandleFunc(articlecommentthread+"/search", app.ArticleCommentThreadHandler.Search).Methods(GET)
+	r.HandleFunc(articlecommentthread+"/search", app.ArticleCommentThreadHandler.Search).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/{id}/{author}", app.ArticleCommentThreadHandler.Comment).Methods(POST)
 	item := "/items"
 	r.HandleFunc(item+"/search", app.Item.Search).Methods(GET, POST)
 	r.HandleFunc(item+"/{id}", app.Item.Load).Methods(GET)
