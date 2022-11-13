@@ -80,10 +80,57 @@ auth:
     access_date_to: accessDateTo
     is_two_factor: isTwoFactor
 
-auth_sql:
-  query: select user_id as userid, username, email as contact, display_name as displayname, status from user where username = ?
-  pass: update users set last_login = ? where user_id = ?
-  disable: D
+authorize:
+  token:
+    secret: secretbackoffice
+    expires: 86400000
+  status:
+    timeout: -1
+    not_found: 0
+    fail: 0
+    success: 1
+    disabled: 2
+    error: 4
+  payload:
+    ip: ip
+    user_id: userId
+    username: username
+    email: email
+    user_type: roleId
+  user_status:
+    activated: A
+    deactivated: D
+  db:
+    id: id
+    user: users
+    password: passwords
+    username: username
+    status: status
+    success_time: successTime
+    fail_time: failTime
+    fail_count: failCount
+    locked_until_time: lockedUntilTime
+  query: select u.id, u.username, u.displayname, email, u.status, p.* from users u
+    inner join passwords p
+    on u.id = p.id
+    where username = $1 and u.status = 'A'
+
+#auth_sql:
+#  id: id
+#  user: users
+#  password: passwords
+#  username: username
+#  status: status
+#  successTime: successTime
+#  failTime: failTime
+#  failCount: failCount
+#  lockedUntilTime: lockedUntilTime
+#  pass: update users set last_login = ? where user_id = ?
+#  disable: D
+#
+#user_status:
+#  activated: A
+#  deactivated: D
 
 key_file: files
 provider: google_storage

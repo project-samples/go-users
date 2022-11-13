@@ -2,14 +2,13 @@ package app
 
 import (
 	"context"
-	"reflect"
-	"strings"
-
 	bofilm "go-service/internal/backoffice/film"
 	"go-service/internal/commentthread"
+	"reflect"
 
 	. "github.com/core-go/auth"
-	am "github.com/core-go/auth/mongo"
+	authhandler "github.com/core-go/auth/handler"
+	sqlauth "github.com/core-go/auth/sql"
 	sv "github.com/core-go/core"
 	"github.com/core-go/core/shortid"
 	v "github.com/core-go/core/v10"
@@ -19,8 +18,6 @@ import (
 	. "github.com/core-go/mail/sendgrid"
 	. "github.com/core-go/mail/smtp"
 	mgo "github.com/core-go/mongo"
-	. "github.com/core-go/oauth2"
-	om "github.com/core-go/oauth2/mongo"
 	. "github.com/core-go/password"
 	sqlpm "github.com/core-go/password/sql"
 	"github.com/core-go/rate"
@@ -86,11 +83,10 @@ import (
 
 type ApplicationContext struct {
 	Health                *Handler
-	Authentication        *AuthenticationHandler
-	SignOut               *SignOutHandler
+	Authentication        *authhandler.AuthenticationHandler
+	SignOut               *authhandler.SignOutHandler
 	Password              *PasswordHandler
 	SignUp                *SignUpHandler
-	OAuth2                *OAuth2Handler
 	User                  user.UserHandler
 	MyProfile             myprofile.MyProfileHandler
 	Skill                 *q.QueryHandler
@@ -186,7 +182,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// if err1 != nil {
 	// 	return nil, err1
 	// }
-	logError := log.ErrorMsg
+	logError := log.LogError
 	modelStatus := sv.InitializeStatus(conf.ModelStatus)
 	action := sv.InitializeAction(conf.Action)
 	validator := v.NewValidator()
@@ -202,8 +198,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	//testQuery := "select username,email from users where username = $1 or email = $2"
 	//rows, err := db.QueryContext(ctx, testQuery, "vinhtq2020", "vinhtq2020@gmail.com")
 	//fmt.Println("rows, err", rows, err)
-	userCollection := "user"
-	authentication := "authentication"
+	//userCollection := "user"
+	//authentication := "authentication"
 
 	redisService, err := redis.NewRedisServiceByConfig(conf.Redis)
 	if err != nil {
@@ -213,16 +209,25 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	mailService := NewMailService(conf.Mail)
 
-	authenticationRepository := am.NewAuthenticationRepositoryByConfig(mongoDb, userCollection, authentication, conf.SignUp.UserStatus.Activated, conf.UserStatus, conf.Auth.Schema)
-	userInfoService := NewUserInfoService(authenticationRepository, conf.MaxPasswordAge, conf.MaxPasswordFailed, conf.LockedMinutes)
+	userInfoService, err := sqlauth.NewUserRepository(db, conf.Authorize.Query, conf.Authorize.DB, conf.Authorize.UserStatus)
+	if err != nil {
+		return nil, err
+	}
+	authStatus := InitStatus(conf.Authorize.Status)
+	//authenticationRepositorySQL, err := sqlauth.NewSqlUserRepository(db, conf.AuthSqlConfig, conf.AuthQuery, conf.UserStatus)
+	//if err != nil {
+	//	return nil, err
+	//}
 	bcryptComparator := &BCryptStringComparator{}
 	tokenService := NewTokenService()
-	verifiedCodeSender := NewPasscodeSender(mailService, conf.Mail.From, NewTemplateLoaderByConfig(conf.Auth.Template))
-	passCodeService := mgo.NewPasscodeRepository(mongoDb, "authenpasscode")
-	status := InitStatus(conf.Status)
-	authenticator := NewAuthenticatorWithTwoFactors(status, userInfoService, bcryptComparator, tokenService.GenerateToken, conf.Token, conf.Payload, nil, verifiedCodeSender.Send, passCodeService, conf.Auth.Expires)
-	authenticationHandler := NewAuthenticationHandler(authenticator.Authenticate, status.Error, status.Timeout, logError)
-	signOutHandler := NewSignOutHandler(tokenService.VerifyToken, conf.Token.Secret, tokenBlacklistChecker.Revoke, logError)
+	//verifiedCodeSender := NewPasscodeSender(mailService, conf.Mail.From, NewTemplateLoaderByConfig(conf.Auth.Template))
+	//passCodeService := mgo.NewPasscodeRepository(mongoDb, "authenpasscode")
+	//authenticator := NewAuthenticatorWithTwoFactors(status, userInfoService, bcryptComparator, tokenService.GenerateToken, conf.Token, conf.Payload, nil, verifiedCodeSender.Send, passCodeService, conf.Auth.Expires)
+	//authenticationHandler := authhandler.NewAuthenticationHandler(authenticator.Authenticate, status.Error, status.Timeout, logError1)
+	//signOutHandler := authhandler.NewSignOutHandler(tokenService.VerifyToken, conf.Token.Secret, tokenBlacklistChecker.Revoke, logError)
+	authenticator := NewAuthenticator(authStatus, userInfoService, bcryptComparator, tokenService.GenerateToken, conf.Authorize.Token, conf.Authorize.Payload)
+	authenticationHandler := authhandler.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError)
+	signOutHandler := authhandler.NewSignOutHandler(tokenService.VerifyToken, conf.Authorize.Token.Secret, tokenBlacklistChecker.Revoke, log.ErrorMsg)
 
 	passwordResetCode := "passwordcodes"
 	//passwordRepository := pm.NewPasswordRepositoryByConfig(mongoDb, userCollection, authentication, userCollection, "userId", conf.Password.Schema)
@@ -249,28 +254,28 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	signUpService := NewSignUpService(signupStatus, true, signUpRepositorySQL, generateId, bcryptComparator.Hash, bcryptComparator, signUpCodeRepositorySQL, signupSender.Send, conf.SignUp.Expires, emailValidator.Validate, exps)
 	signupHandler := NewSignUpHandler(signUpService, signupStatus.Error, log.LogError, conf.SignUp.Action)
 
-	integrationConfiguration := "integrationconfiguration"
-	sources := []string{SourceGoogle, SourceFacebook, SourceLinkedIn, SourceAmazon, SourceMicrosoft, SourceDropbox}
-	oauth2UserRepositories := make(map[string]OAuth2UserRepository)
-	oauth2UserRepositories[SourceGoogle] = NewGoogleUserRepository()
-	oauth2UserRepositories[SourceFacebook] = NewFacebookUserRepository()
-	oauth2UserRepositories[SourceLinkedIn] = NewLinkedInUserRepository()
-	oauth2UserRepositories[SourceAmazon] = NewAmazonUserRepository(conf.CallBackURL.Amazon)
-	oauth2UserRepositories[SourceMicrosoft] = NewMicrosoftUserRepository(conf.CallBackURL.Microsoft)
-	oauth2UserRepositories[SourceDropbox] = NewDropboxUserRepository()
+	//integrationConfiguration := "integrationconfiguration"
+	//sources := []string{SourceGoogle, SourceFacebook, SourceLinkedIn, SourceAmazon, SourceMicrosoft, SourceDropbox}
+	//oauth2UserRepositories := make(map[string]OAuth2UserRepository)
+	//oauth2UserRepositories[SourceGoogle] = NewGoogleUserRepository()
+	//oauth2UserRepositories[SourceFacebook] = NewFacebookUserRepository()
+	//oauth2UserRepositories[SourceLinkedIn] = NewLinkedInUserRepository()
+	//oauth2UserRepositories[SourceAmazon] = NewAmazonUserRepository(conf.CallBackURL.Amazon)
+	//oauth2UserRepositories[SourceMicrosoft] = NewMicrosoftUserRepository(conf.CallBackURL.Microsoft)
+	//oauth2UserRepositories[SourceDropbox] = NewDropboxUserRepository()
 
-	activatedStatus := conf.SignUp.UserStatus.Activated
-	schema := conf.OAuth2.Schema
-	services := strings.Split(conf.OAuth2.Services, ",")
-	userRepositories := make(map[string]UserRepository)
-	for _, source := range sources {
-		userRepository := om.NewUserRepositoryByConfig(mongoDb, userCollection, source, activatedStatus, services, schema, &conf.UserStatus)
-		userRepositories[source] = userRepository
-	}
-	configurationRepository := om.NewConfigurationRepository(mongoDb, integrationConfiguration, oauth2UserRepositories, "status", "A")
-
-	oauth2Service := NewOAuth2Service(status, oauth2UserRepositories, userRepositories, configurationRepository, generateId, tokenService, conf.Token, nil)
-	oauth2Handler := NewDefaultOAuth2Handler(oauth2Service, status.Error, log.LogError)
+	//activatedStatus := conf.SignUp.UserStatus.Activated
+	//schema := conf.OAuth2.Schema
+	//services := strings.Split(conf.OAuth2.Services, ",")
+	//userRepositories := make(map[string]UserRepository)
+	//for _, source := range sources {
+	//	userRepository := om.NewUserRepositoryByConfig(mongoDb, userCollection, source, activatedStatus, services, schema, &conf.UserStatus)
+	//	userRepositories[source] = userRepository
+	//}
+	//configurationRepository := om.NewConfigurationRepository(mongoDb, integrationConfiguration, oauth2UserRepositories, "status", "A")
+	//
+	//oauth2Service := NewOAuth2Service(status, oauth2UserRepositories, userRepositories, configurationRepository, generateId, tokenService, conf.Token, nil)
+	//oauth2Handler := NewDefaultOAuth2Handler(oauth2Service, status.Error, log.LogError)
 
 	mongoHealthChecker := mgo.NewHealthChecker(mongoDb)
 	redisHealthChecker := redis.NewHealthChecker(redisService.Pool)
@@ -1048,90 +1053,89 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	bomusicHandler := bomusic.NewBackofficeMusicHandler(bomusicSearchBuilder.Search, bomusicService, log.LogError, nil, validator.Validate, modelStatus, action)
 
 	app := ApplicationContext{
-		Health:                      healthHandler,
-		Authentication:              authenticationHandler,
-		SignOut:                     signOutHandler,
-		Password:                    passwordHandler,
-		SignUp:                      signupHandler,
-		OAuth2:                      oauth2Handler,
-		User:                        userHandler,
-		MyProfile:                   myProfileHandler,
-		Skill:                       skillHandler,
-		Interest:                    interestHandler,
-		LookingFor:                  lookingForHandler,
-		Education:                   educationHandler,
-		Companies:                   companiesHandler,
-		Work:                        workHandler,
-		Location:                    locationHandler,
-		LocationRate:                locationRateHandler,
-		MyArticles:                  myarticlesHandler,
-		Article:                     articleHandler,
-		Appreciation:                appreciationHandler,
-		Follow:                      followHandler,
-		Comment:                     commentHandler,
-		Reaction:                    reactionHandler,
-		Rate:                        rateHandler,
-		SearchRate:                  searchRateHandler,
-		Response:                    responseHandler,
-		SearchResponse:              searchResponseHandler,
-		SearchComment:               searchCommentHandler,
-		CinemaComment:               cinemaCommentHandler,
-		CinemaReaction:              cinemaReactionHandler,
-		CinemaRate:                  cinemaRateHandler,
-		CinemaSearchRate:            searchCinemaRateHandler,
-		CinemaResponse:              responseHandler,
-		CinemaSearchResponse:        searchResponseHandler,
-		CinemaSearchComment:         searchCinemaCommentHandler,
-		Item:                        itemHandler,
-		MyItem:                      myItemHandler,
-		Film:                        filmHandler,
-		Company:                     companyHandler,
-		BackofficeCinema:            boCinemaHandler,
-		FilmCategory:                filmCategoryHandler,
-		CompanyCategory:             companyCategoryHandler,
-		ItemCategory:                itemCategoryHandler,
-		SavedFilm:                   savedfilmHandler,
-		BackofficeFilm:              boFilmHandler,
-		Director:                    directorHandler,
-		Cast:                        castHandler,
-		Country:                     countryHander,
-		Production:                  productionHandler,
-		BackofficeCompany:           boCompanyHandler,
-		Savedlocation:               locationSaveHandler,
-		FollowLocation:              locationFollowHandler,
-		LocationInfomation:          locationInfomationHandler,
-		SearchLocationRate:          searchLocationRateHandler,
-		LocationReaction:            locationReactionHandler,
-		LocationComment:             locationCommentHandler,
-		SearchLocationComment:       searchLocationCommentHandler,
-		Job:                         jobHandler,
-		Room:                        roomHandler,
-		Music:                       musicHandler,
-		Playlist:                    playlistHandler,
-		BackofficeRoom:              boRoomHandler,
-		BackofficeMusic:             bomusicHandler,
-		BackofficeJob:               boJobHandler,
-		BackofficeLocation:          boLocationHandler,
-		ArticleRate:                 articleRateHandler,
-		ArticleRateSearch:           articleRateSearchHandler,
-		ArticleRateReaction:         articleRateReactionHandler,
-		ArticleComment:              articleCommentHandler,
-		SearchArticleComment:        searchArticleRateCommentHandler,
-		Cinema:                      cinemaHandler,
-		SavedItem:                   savedItemHandler,
-		CompanyRate:                 companyRateHandler,
-		SearchCompanyRate:           searchCompanyRateHandler,
-		SearchCompanyComment:        searchCompanyCommentHandler,
-		CompanyReaction:             companyReactionHandler,
-		CompanyComment:              companyCommentHandler,
-		UserReact:                   userReactHandler,
-		UserInfomation:              userInfomationHandler,
-		SearchUserRate:              searchUserRateHandler,
-		SearchUserRateComment:       searchUserRateCommentHandler,
-		UserRate:                    userRateHandler,
-		UserRateReaction:            userRateReactionHandler,
-		UserRateComment:             userRateCommentHandler,
-		ArticleCommentThreadHandler: articleCommentThreadHandler,
+		Health:         healthHandler,
+		Authentication: authenticationHandler,
+		SignOut:        signOutHandler,
+		Password:       passwordHandler,
+		SignUp:         signupHandler,
+		//OAuth2:                oauth2Handler,
+		User:                  userHandler,
+		MyProfile:             myProfileHandler,
+		Skill:                 skillHandler,
+		Interest:              interestHandler,
+		LookingFor:            lookingForHandler,
+		Education:             educationHandler,
+		Companies:             companiesHandler,
+		Work:                  workHandler,
+		Location:              locationHandler,
+		LocationRate:          locationRateHandler,
+		MyArticles:            myarticlesHandler,
+		Article:               articleHandler,
+		Appreciation:          appreciationHandler,
+		Follow:                followHandler,
+		Comment:               commentHandler,
+		Reaction:              reactionHandler,
+		Rate:                  rateHandler,
+		SearchRate:            searchRateHandler,
+		Response:              responseHandler,
+		SearchResponse:        searchResponseHandler,
+		SearchComment:         searchCommentHandler,
+		CinemaComment:         cinemaCommentHandler,
+		CinemaReaction:        cinemaReactionHandler,
+		CinemaRate:            cinemaRateHandler,
+		CinemaSearchRate:      searchCinemaRateHandler,
+		CinemaResponse:        responseHandler,
+		CinemaSearchResponse:  searchResponseHandler,
+		CinemaSearchComment:   searchCinemaCommentHandler,
+		Item:                  itemHandler,
+		MyItem:                myItemHandler,
+		Film:                  filmHandler,
+		Company:               companyHandler,
+		BackofficeCinema:      boCinemaHandler,
+		FilmCategory:          filmCategoryHandler,
+		CompanyCategory:       companyCategoryHandler,
+		ItemCategory:          itemCategoryHandler,
+		SavedFilm:             savedfilmHandler,
+		BackofficeFilm:        boFilmHandler,
+		Director:              directorHandler,
+		Cast:                  castHandler,
+		Country:               countryHander,
+		Production:            productionHandler,
+		BackofficeCompany:     boCompanyHandler,
+		Savedlocation:         locationSaveHandler,
+		FollowLocation:        locationFollowHandler,
+		LocationInfomation:    locationInfomationHandler,
+		SearchLocationRate:    searchLocationRateHandler,
+		LocationReaction:      locationReactionHandler,
+		LocationComment:       locationCommentHandler,
+		SearchLocationComment: searchLocationCommentHandler,
+		Job:                   jobHandler,
+		Room:                  roomHandler,
+		Music:                 musicHandler,
+		Playlist:              playlistHandler,
+		BackofficeRoom:        boRoomHandler,
+		BackofficeMusic:       bomusicHandler,
+		BackofficeJob:         boJobHandler,
+		BackofficeLocation:    boLocationHandler,
+		ArticleRate:           articleRateHandler,
+		ArticleRateSearch:     articleRateSearchHandler,
+		ArticleRateReaction:   articleRateReactionHandler,
+		ArticleComment:        articleCommentHandler,
+		SearchArticleComment:  searchArticleRateCommentHandler,
+		Cinema:                cinemaHandler,
+		SavedItem:             savedItemHandler,
+		CompanyRate:           companyRateHandler,
+		SearchCompanyRate:     searchCompanyRateHandler,
+		SearchCompanyComment:  searchCompanyCommentHandler,
+		CompanyReaction:       companyReactionHandler,
+		CompanyComment:        companyCommentHandler,
+		UserReact:             userReactHandler,
+		UserInfomation:        userInfomationHandler,
+		SearchUserRate:        searchUserRateHandler,
+		SearchUserRateComment: searchUserRateCommentHandler,
+		UserRate:              userRateHandler,
+		UserRateReaction:      userRateReactionHandler,
+		UserRateComment:       userRateCommentHandler,
 	}
 	return &app, nil
 }
