@@ -32,6 +32,7 @@ func NewCommentThreadService(
 	updatedAtCol string,
 	threadReplyTable string,
 	commentIdThreadReplyCol string,
+	commentThreadIdReplyCol string,
 	threadInfoTable string,
 	commentIdthreadInfo string,
 	threadReplyInfoTable string,
@@ -55,6 +56,7 @@ func NewCommentThreadService(
 		userIdThreadCol:             userIdThreadCol,
 		threadReplyTable:            threadReplyTable,
 		commentIdThreadReplyCol:     commentIdThreadReplyCol,
+		commentThreadIdReplyCol:     commentThreadIdReplyCol,
 		threadInfoTable:             threadInfoTable,
 		commentIdthreadInfo:         commentIdthreadInfo,
 		threadReplyInfoTable:        threadReplyInfoTable,
@@ -83,6 +85,7 @@ type commentThreadService struct {
 	userIdThreadCol             string
 	threadReplyTable            string
 	commentIdThreadReplyCol     string
+	commentThreadIdReplyCol     string
 	threadInfoTable             string
 	commentIdthreadInfo         string
 	threadReplyInfoTable        string
@@ -93,7 +96,6 @@ type commentThreadService struct {
 	commentIdReactionRelyCol    string
 }
 
-// Remove implements CommentThreadService
 func (s *commentThreadService) Remove(ctx context.Context, commentId string) (int64, error) {
 	var rowResult int64
 	rowResult = 0
@@ -113,7 +115,7 @@ func (s *commentThreadService) Remove(ctx context.Context, commentId string) (in
 	}
 	rowResult += rowsAffected
 
-	qr2 := fmt.Sprintf("Delete from %s where %s = $1", s.threadReplyTable, s.commentIdThreadReplyCol)
+	qr2 := fmt.Sprintf("Delete from %s where %s = $1", s.threadReplyTable, s.commentThreadIdReplyCol)
 	res, err = tx.ExecContext(ctx, qr2, commentId)
 	if err != nil {
 		return -1, err
@@ -134,11 +136,22 @@ func (s *commentThreadService) Remove(ctx context.Context, commentId string) (in
 		return -1, err
 	}
 	rowResult += rowsAffected
+	idQr := fmt.Sprintf("select %s from %s where %s = $1", s.commentIdThreadReplyCol, s.threadReplyTable, s.commentThreadIdReplyCol)
+	rows, err := s.db.QueryContext(ctx, idQr, commentId)
+	if err != nil {
+		return -1, err
+	}
+	defer rows.Close()
+	var ids = []string{}
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		ids = append(ids, id)
+	}
+	qr4 := fmt.Sprintf("delete from %s a where a.%s = ANY($1)",
+		s.threadReplyInfoTable, s.commentIdThreadReplyInfoCol)
 
-	qr4 := fmt.Sprintf("delete from %s a where %s in (select %s from %s where %s = $1)",
-		s.threadReplyInfoTable, s.commentIdThreadReplyInfoCol, s.commentIdThreadReplyCol, s.threadReplyTable, s.commentIdThreadReplyCol)
-
-	res, err = tx.ExecContext(ctx, qr4, commentId)
+	res, err = tx.ExecContext(ctx, qr4, s.toArray(ids))
 	if err != nil {
 		return -1, err
 	}
@@ -159,14 +172,14 @@ func (s *commentThreadService) Remove(ctx context.Context, commentId string) (in
 		return -1, err
 	}
 	rowResult += rowsAffected
-	qr6 := fmt.Sprintf("delete from %s a where %s in (select %s from %s where %s = $1)",
-		s.reactionReplyTable, s.commentIdReactionRelyCol, s.commentIdThreadReplyCol, s.threadReplyTable, s.commentIdThreadReplyCol)
+	qr6 := fmt.Sprintf("delete from %s a where a.%s = ANY($1)",
+		s.reactionReplyTable, s.commentIdReactionRelyCol)
 
-	res, err = tx.ExecContext(ctx, qr6, commentId)
+	res2, err := tx.ExecContext(ctx, qr6, s.toArray(ids))
 	if err != nil {
 		return -1, err
 	}
-	rowsAffected, err = res.RowsAffected()
+	rowsAffected, err = res2.RowsAffected()
 	if err != nil {
 		return -1, err
 	}
@@ -178,40 +191,43 @@ func (s *commentThreadService) Remove(ctx context.Context, commentId string) (in
 	return rowResult, nil
 }
 
-// Load implements CommentThreadService
 func (s *commentThreadService) Load(ctx context.Context, commentId string) (*CommentThread, error) {
 	qr1 := fmt.Sprintf("Select * from %s where %s = $1", s.threadTable, s.commentIdThreadCol)
 	res, err := s.db.QueryContext(ctx, qr1, commentId)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Close()
 	for res.Next() {
-		var item *CommentThread
-		err = res.Scan(&item.CommentId, &item.Id, &item.Author, &item.UserId, &item.Comment, &item.Time, &item.UpdatedAt, s.toArray(&item.Histories))
+		var item CommentThread
+		err = res.Scan(
+			&item.CommentId,
+			&item.Id,
+			&item.Author,
+			&item.Comment,
+			&item.Time,
+			&item.UpdatedAt,
+			s.toArray(&item.Histories),
+			&item.UserId)
 		if err != nil {
 			return nil, err
 		}
-		return item, nil
+		return &item, nil
 	}
 	return nil, nil
 }
 
-// Update implements CommentThreadService
 func (s *commentThreadService) Update(ctx context.Context, comment CommentThread) (int64, error) {
 	exist, err := s.Load(ctx, comment.CommentId)
 	if err != nil {
 		return -1, err
 	}
 	if exist != nil {
-		updatedTime := comment.UpdatedAt
-		if exist.UpdatedAt == nil {
-			updatedTime = &exist.Time
-		}
-
-		exist.Histories = append(exist.Histories, History{Comment: comment.Comment, Time: *updatedTime})
+		updatedTime := time.Now()
+		exist.Histories = append(exist.Histories, History{Comment: comment.Comment, Time: updatedTime})
 		qr1 := fmt.Sprintf("update %s set %s = $1, %s = $2, %s = $3 where %s = $4",
 			s.threadTable, s.commentThreadCol, s.updatedAtCol, s.historiesThreadCol, s.commentIdThreadCol)
-		res, err := s.db.ExecContext(ctx, qr1, comment.Comment, time.Now(), comment.Histories, comment.CommentId)
+		res, err := s.db.ExecContext(ctx, qr1, comment.Comment, updatedTime, s.toArray(exist.Histories), comment.CommentId)
 		if err != nil {
 			return -1, err
 		}
@@ -220,14 +236,13 @@ func (s *commentThreadService) Update(ctx context.Context, comment CommentThread
 	return -1, nil
 }
 
-// comment implements CommentThreadService
 func (s *commentThreadService) Comment(ctx context.Context, comment CommentThread) (int64, error) {
-	// insert into commentthread(commentid, id, author , userId, comment, time ,histories) values ()
-	qr1 := fmt.Sprintf("insert into %s(%s,%s,%s,%s,%s,%s,%s) values($1, $2, $3, $4, $5, $6)",
+	qr1 := fmt.Sprintf("insert into %s(%s,%s,%s,%s,%s,%s,%s) values($1, $2, $3, $4, $5, $6, $7)",
 		s.threadTable, s.commentIdThreadCol, s.idThreadCol, s.authorThreadCol, s.userIdThreadCol, s.commentThreadCol, s.timeThreadCol, s.historiesThreadCol)
-	res, err := s.db.ExecContext(ctx, qr1, comment.CommentId, comment.Id, comment.Author, comment.UserId, comment.Comment, comment.Time, []History{})
+	res, err := s.db.ExecContext(ctx, qr1, comment.CommentId, comment.Id, comment.Author, comment.UserId, comment.Comment, comment.Time, s.toArray([]History{}))
 	if err != nil {
 		return -1, err
 	}
 	return res.RowsAffected()
+
 }

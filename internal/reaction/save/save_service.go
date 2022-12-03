@@ -1,29 +1,27 @@
-package saveditem
+package save
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"go-service/internal/item"
 
 	"github.com/lib/pq"
 )
 
-type SavedItemService interface {
-	Load(ctx context.Context, id string) ([]item.Item, error)
+type SaveService interface {
+	Load(ctx context.Context, id string) ([]*Save, error)
 	Save(ctx context.Context, id string, item string) (int64, error)
 	Remove(ctx context.Context, id string, item string) (int64, error)
 }
 
-func NewSavedItemService(
+func NewSaveService(
 	db *sql.DB,
 	table string,
 	idCol string,
 	itemCol string,
 	max int,
-
-) SavedItemService {
-	return &savedItemService{
+) SaveService {
+	return &saveService{
 		DB:      db,
 		Table:   table,
 		IdCol:   idCol,
@@ -32,7 +30,7 @@ func NewSavedItemService(
 	}
 }
 
-type savedItemService struct {
+type saveService struct {
 	DB      *sql.DB
 	Table   string
 	IdCol   string
@@ -40,68 +38,27 @@ type savedItemService struct {
 	Max     int
 }
 
-func (s *savedItemService) Load(ctx context.Context, id string) ([]item.Item, error) {
-	var saveList []*SavedItem
-	query := fmt.Sprintf("select %s as id, %s as items from %s where %s = $1", s.IdCol, s.ItemCol, s.Table, s.IdCol)
-
+func (s *saveService) Load(ctx context.Context, id string) ([]*Save, error) {
+	var saveList []*Save
+	query := fmt.Sprintf("select %s as id, %s as item from %s where %s = $1", s.IdCol, s.ItemCol, s.Table, s.IdCol)
+	fmt.Println(query)
 	rows, err := s.DB.QueryContext(ctx, query, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var save SavedItem
-		err = rows.Scan(&save.Id, pq.Array(&save.Items))
+		var save Save
+		err = rows.Scan(&save.Id, pq.Array(&save.Item))
 		if err != nil {
 			return nil, err
 		}
 		saveList = append(saveList, &save)
 	}
-	result := []item.Item{}
-
-	if len(saveList[0].Items) == 0 {
-		return result, nil
-	}
-
-	query2 := fmt.Sprintf("SELECT * FROM %s WHERE %s = ANY($1)", "Item", "id")
-	stmt, err0 := s.DB.PrepareContext(ctx, query2)
-	if err0 != nil {
-		return nil, err0
-	}
-	rows, err1 := stmt.QueryContext(ctx, pq.Array(saveList[0].Items))
-	if err1 != nil {
-		return nil, err1
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var Item item.Item
-		err2 := rows.Scan(
-			&Item.Id,
-			&Item.Title,
-			&Item.Author,
-			&Item.Description,
-			&Item.Status,
-			&Item.Price,
-			&Item.ImageURL,
-			&Item.Brand,
-			&Item.PublishedAt,
-			&Item.ExpiredAt,
-			pq.Array(&Item.Categories),
-			pq.Array(&Item.Gallery),
-		)
-		if err2 != nil {
-			fmt.Println("result: ", err2)
-
-			return nil, err2
-		}
-		result = append(result, Item)
-	}
-	return result, nil
-
+	return saveList, nil
 }
 
-func (s *savedItemService) Save(ctx context.Context, id string, item string) (int64, error) {
-
+func (s *saveService) Save(ctx context.Context, id string, item string) (int64, error) {
 	var items []string
 	query0 := fmt.Sprintf("select %s as items from %s where %s = $1", s.ItemCol, s.Table, s.IdCol)
 	rows, err0 := s.DB.QueryContext(ctx, query0, id)
@@ -117,7 +74,6 @@ func (s *savedItemService) Save(ctx context.Context, id string, item string) (in
 		}
 
 	}
-
 	if len(items) == 0 {
 		query := fmt.Sprintf("insert into %s(%s, %s) values ($1, $2)", s.Table, s.IdCol, s.ItemCol)
 		stmt, er0 := s.DB.Prepare(query)
@@ -129,6 +85,7 @@ func (s *savedItemService) Save(ctx context.Context, id string, item string) (in
 		if err != nil {
 			return -1, err
 		}
+
 		return res.RowsAffected()
 	} else {
 		query := fmt.Sprintf("update %s set %s = $1 where %s = $2", s.Table, s.ItemCol, s.IdCol)
@@ -153,17 +110,17 @@ func (s *savedItemService) Save(ctx context.Context, id string, item string) (in
 	}
 }
 
-func (s *savedItemService) Remove(ctx context.Context, id string, item string) (int64, error) {
+func (s *saveService) Remove(ctx context.Context, id string, item string) (int64, error) {
 	query0 := fmt.Sprintf("select %s as id, %s as items from %s where %s = $1", s.IdCol, s.ItemCol, s.Table, s.IdCol)
 	rows, err0 := s.DB.QueryContext(ctx, query0, id)
 	if err0 != nil {
 		return -1, err0
 	}
-	var items []SavedItem
+	var items []Save
 	defer rows.Close()
 	for rows.Next() {
-		var item SavedItem
-		err := rows.Scan(&item.Id, pq.Array(&item.Items))
+		var item Save
+		err := rows.Scan(&item.Id, pq.Array(&item.Item))
 		if err != nil {
 			return -1, err
 		}
@@ -173,9 +130,9 @@ func (s *savedItemService) Remove(ctx context.Context, id string, item string) (
 		return 0, nil
 	}
 	newItems := []string{}
-	for i := 0; i < len(items[0].Items); i++ {
-		if items[0].Items[i] != item {
-			newItems = append(newItems, items[0].Items[i])
+	for i := 0; i < len(items[0].Item); i++ {
+		if items[0].Item[i] != item {
+			newItems = append(newItems, items[0].Item[i])
 		}
 	}
 	query := fmt.Sprintf("update %s set %s = $1 where %s = $2", s.Table, s.ItemCol, s.IdCol)
