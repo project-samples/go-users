@@ -4,6 +4,10 @@ import (
 	"context"
 	bofilm "go-service/internal/backoffice/film"
 	"go-service/internal/commentthread"
+	commentthreadreply "go-service/internal/commentthread/comment"
+	muxcomment "go-service/internal/commentthread/comment/mux"
+	muxcommentthread "go-service/internal/commentthread/mux"
+	commentthreadreaction "go-service/internal/commentthread/reaction"
 	"reflect"
 
 	. "github.com/core-go/auth"
@@ -20,18 +24,35 @@ import (
 	mgo "github.com/core-go/mongo"
 	. "github.com/core-go/password"
 	sqlpm "github.com/core-go/password/sql"
-	"github.com/core-go/rate"
-	"github.com/core-go/rate/criteria"
-	searchrate "github.com/core-go/rate/search"
-	"github.com/core-go/reaction"
-	"github.com/core-go/reaction/comment"
-	searchcomment "github.com/core-go/reaction/comment/search"
-	"github.com/core-go/reaction/follow"
-	"github.com/core-go/reaction/response"
-	searchresponse "github.com/core-go/reaction/response/response"
-	"github.com/core-go/reaction/save"
-	"github.com/core-go/reaction/userreaction"
+
+	// "github.com/core-go/rate"
+	// "github.com/core-go/rate/rates"
+	// searchrate "github.com/core-go/rate/search"
+	// "github.com/core-go/reaction"
+	// "github.com/core-go/reaction/comment"
+	// commentmux "github.com/core-go/reaction/comment/mux"
+	// searchcomment "github.com/core-go/reaction/comment/search"
+	// "github.com/core-go/reaction/follow"
+	// "github.com/core-go/reaction/response"
+	// searchresponse "github.com/core-go/reaction/response/response"
+	// "github.com/core-go/reaction/save"
+	// userreaction "github.com/core-go/reaction/user-reaction"
+
+	"go-service/internal/rate"
+	"go-service/internal/rate/rates"
+	searchrate "go-service/internal/rate/search"
+	"go-service/internal/reaction"
+	"go-service/internal/reaction/comment"
+	commentmux "go-service/internal/reaction/comment/mux"
+	searchcomment "go-service/internal/reaction/comment/search"
+	"go-service/internal/reaction/follow"
+	"go-service/internal/reaction/response"
+	searchresponse "go-service/internal/reaction/response/response"
+	"go-service/internal/reaction/save"
+	userreaction "go-service/internal/reaction/user-reaction"
+
 	"github.com/core-go/redis"
+	"github.com/core-go/search"
 	"github.com/core-go/search/convert"
 	sq "github.com/core-go/search/query"
 	. "github.com/core-go/security/crypto"
@@ -73,8 +94,7 @@ import (
 	"go-service/internal/myprofile"
 	"go-service/internal/playlist"
 	"go-service/internal/room"
-	"go-service/internal/saveditem"
-	"go-service/internal/savedlocation"
+	saveditem "go-service/internal/save"
 	"go-service/internal/user"
 	"go-service/internal/userinfomation"
 
@@ -101,29 +121,29 @@ type ApplicationContext struct {
 	Production            *q.QueryHandler
 	Location              location.LocationHandler
 	LocationRate          rate.RateHandler
-	SearchLocationRate    searchrate.RateSearchHandler
+	SearchLocationRate    *search.SearchHandler
 	MyArticles            myarticles.ArticleHandler
 	Article               article.ArticleHandler
 	ArticleRate           rate.RateHandler
-	ArticleRateSearch     searchrate.RateSearchHandler
+	ArticleRateSearch     *search.SearchHandler
 	ArticleRateReaction   reaction.ReactionHandler
 	Appreciation          appreciation.AppreciationHandler
 	Follow                follow.FollowHandler
-	SavedItem             saveditem.SavedItemHandler
-	Comment               comment.CommentHandler
+	SavedItem             saveditem.SaveHandler
+	Comment               commentmux.CommentHandler
 	Reaction              reaction.ReactionHandler
 	Rate                  rate.RateHandler
 	Response              response.ResponseHandler
-	SearchRate            searchrate.RateSearchHandler
-	SearchResponse        searchresponse.SearchResponseHandler
-	SearchComment         searchcomment.SearchCommentHandler
-	CinemaComment         comment.CommentHandler
+	SearchRate            *search.SearchHandler
+	SearchResponse        *search.SearchHandler
+	SearchComment         *search.SearchHandler
+	CinemaComment         commentmux.CommentHandler
 	CinemaReaction        reaction.ReactionHandler
 	CinemaRate            rate.RateHandler
 	CinemaResponse        response.ResponseHandler
-	CinemaSearchRate      searchrate.RateSearchHandler
-	CinemaSearchResponse  searchresponse.SearchResponseHandler
-	CinemaSearchComment   searchcomment.SearchCommentHandler
+	CinemaSearchRate      *search.SearchHandler
+	CinemaSearchResponse  *search.SearchHandler
+	CinemaSearchComment   *search.SearchHandler
 	Item                  item.ItemHandler
 	MyItem                myitem.MyItemHandler
 	Company               company.CompanyHandler
@@ -135,37 +155,41 @@ type ApplicationContext struct {
 	CompanyCategory       category.CategoryHandler
 	ItemCategory          category.CategoryHandler
 	SavedFilm             save.SaveHandler
-	Savedlocation         save.SaveHandler
+	Savedlocation         saveditem.SaveHandler
 	FollowLocation        follow.FollowHandler
 	LocationInfomation    locationinfomation.LocationInfomationHandler
 	LocationReaction      reaction.ReactionHandler
-	LocationComment       comment.CommentHandler
-	SearchLocationComment searchcomment.SearchCommentHandler
+	LocationComment       commentmux.CommentHandler
+	SearchLocationComment *search.SearchHandler
 	BackofficeLocation    bolocation.BackOfficeLocationHandler
 
-	ArticleComment              comment.CommentHandler
-	SearchArticleComment        searchcomment.SearchCommentHandler
-	Cinema                      cinema.CinemaHandler
-	SearchCompanyRate           searchrate.RateSearchHandler
-	SearchCompanyComment        searchcomment.SearchCommentHandler
-	Job                         job.JobHandler
-	Room                        room.RoomHandler
-	Music                       music.MusicHandler
-	Playlist                    playlist.PlaylistHandler
-	BackofficeRoom              boroom.BackofficeRoomHandler
-	BackofficeMusic             bomusic.BackofficeMusicHandler
-	BackofficeJob               bojob.BackofficeJobHandler
-	CompanyRate                 criteria.RateCriteriaHandler
-	CompanyReaction             reaction.ReactionHandler
-	CompanyComment              comment.CommentHandler
-	UserReact                   userreaction.UserReactionHandler
-	UserInfomation              userinfomation.UserInfomationHandler
-	SearchUserRate              searchrate.RateSearchHandler
-	SearchUserRateComment       searchcomment.SearchCommentHandler
-	UserRate                    rate.RateHandler
-	UserRateReaction            reaction.ReactionHandler
-	UserRateComment             comment.CommentHandler
-	ArticleCommentThreadHandler commentthread.CommentThreadHandler
+	ArticleComment                    commentmux.CommentHandler
+	ArticleCommentThreadHandler       muxcommentthread.CommentThreadHandler
+	ArticleCommentThreadReplyHandler  muxcomment.CommentHandler
+	SearchArticleComment              *search.SearchHandler
+	SearchArticleCommentThread        *search.SearchHandler
+	Cinema                            cinema.CinemaHandler
+	SearchCompanyRate                 *search.SearchHandler
+	SearchCompanyComment              *search.SearchHandler
+	Job                               job.JobHandler
+	Room                              room.RoomHandler
+	Music                             music.MusicHandler
+	Playlist                          playlist.PlaylistHandler
+	BackofficeRoom                    boroom.BackofficeRoomHandler
+	BackofficeMusic                   bomusic.BackofficeMusicHandler
+	BackofficeJob                     bojob.BackofficeJobHandler
+	CompanyRate                       rates.RatesHandler
+	CompanyReaction                   reaction.ReactionHandler
+	CompanyComment                    commentmux.CommentHandler
+	UserReact                         userreaction.UserReactionHandler
+	UserInfomation                    userinfomation.UserInfomationHandler
+	SearchUserRate                    *search.SearchHandler
+	SearchUserRateComment             *search.SearchHandler
+	UserRate                          rate.RateHandler
+	UserRateReaction                  reaction.ReactionHandler
+	UserRateComment                   commentmux.CommentHandler
+	ArticleCommentThreadReaction      commentthreadreaction.CommentReactionHandler
+	ArticleCommentThreadReplyReaction commentthreadreaction.CommentReactionHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
@@ -298,31 +322,37 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	userReactService := userreaction.NewUserReactionService(db, "userreaction", "id", "author", "reaction",
 		"userinfo", "id", "reactioncount", "level", "count")
-	userReactHandler := userreaction.NewUserReactionHandler(userReactService, modelStatus, log.LogError, validator.Validate, action)
+	userReactHandler := userreaction.NewUserReactionHandler(userReactService, "id", "author", "reaction")
 
 	userRateReactionService := reaction.NewReactionService(db, "userratereaction", "id", "author", "userid", "time", "reaction",
 		"userrate", "id", "author", "usefulcount")
-	userRateReactionHandler := reaction.NewReactionHandler(userRateReactionService, modelStatus, log.LogError, validator.Validate, &action)
+	userRateReactionHandler := reaction.NewReactionHandler(userRateReactionService, 0, 2, 3)
 	// user rate
 	userRateService := rate.NewRateService(db, "userrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
 		"userrateinfo", "id", "rate", "count", "score", pq.Array)
 
-	userRateHandler := rate.NewRateHandler(userRateService, modelStatus, log.LogError, validator.Validate, &action, 2, 1)
+	userRateHandler := rate.NewRateHandler(userRateService, 0, 1, 5)
 
 	// search user rate
-	userRateType := reflect.TypeOf(searchrate.Rate{})
+	userRateType := reflect.TypeOf(rate.Rate{})
+	userRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
 	searchUserRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "userrate", templates, &userRateType, convert.ToMap, buildParam)
 	if err != nil {
 		return nil, err
 	}
 	userRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, userRateType, searchUserRateQuery, pq.Array)
-	searchUserRateHandler := searchrate.NewRateSearchHandler(userRateSearchBuilder.Search, log.LogError)
+	if err != nil {
+		return nil, err
+	}
+	searchUserRateHandler := search.NewSearchHandler(userRateSearchBuilder.Search, userRateType, userRateFilterType, log.LogError, nil)
+
 	// user rate comment
 	userRateCommentService := comment.NewCommentService(db, "userratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"userrate", "id", "author", "replycount", pq.Array)
-	userRateCommentHandler := comment.NewCommentHandler(userRateCommentService, modelStatus, log.LogError, validator.Validate, &action)
+		"userrate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	userRateCommentHandler := commentmux.NewCommentHandler(userRateCommentService, "commentId", "id", "author", "userId")
 	// search user rate comment
 	searchUserRateCommentType := reflect.TypeOf(searchcomment.Comment{})
+	searchUserRateCommentFilterType := reflect.TypeOf(searchcomment.CommentFilter{})
 	searchUserRateCommentQuery, err := template.UseQueryWithArray(conf.Template, nil, "userratecomment", templates, &searchUserRateCommentType, convert.ToMap, buildParam)
 	if err != nil {
 		return nil, err
@@ -331,8 +361,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchUserRateCommentHandler := searchcomment.NewSearchCommentHandler(searchUserRateCommentBuilder.Search, log.LogError)
-
+	searchUserRateCommentHandler := search.NewSearchHandler(searchUserRateCommentBuilder.Search, searchUserRateCommentType, searchUserRateCommentFilterType, logError, nil)
 	skillService := q.NewStringService(db, "skills", "skill")
 	skillHandler := q.NewQueryHandler(skillService.Load, log.LogError)
 	interestService := q.NewStringService(db, "interests", "interest")
@@ -394,31 +423,38 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	locationInfoRepository, err := sql.NewViewRepositoryWithArray(db, "locationinfo", locationInfoType, pq.Array)
+	if err != nil {
+		return nil, err
+	}
 	locationService := location.NewLocationService(locationRepository, locationInfoRepository)
 	locationHandler := location.NewLocationHandler(locationSearchBuilder.Search, locationService, log.LogError, nil)
 
 	// search location rate
 	locationRateType := reflect.TypeOf(rate.Rate{})
+	locationRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
 	locationRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "locationrate", templates, &locationRateType, convert.ToMap, buildParam, pq.Array)
-	locationRateSearchBuilder, err := s.NewSearchBuilder(db, locationRateType, locationRateQuery)
-	// locationRateSearchBuilder := mgo.NewSearchBuilder(locationDb, "locationRate", locationRateQuery, search.GetSort)
-	// getLocationRate := mgo.UseGet(locationDb, "locationRate", locationRateType)
 	if err != nil {
 		return nil, err
 	}
-	searchLocationRateHandler := searchrate.NewRateSearchHandler(locationRateSearchBuilder.Search, log.LogError)
+	locationRateSearchBuilder, err := s.NewSearchBuilder(db, locationRateType, locationRateQuery)
+	if err != nil {
+		return nil, err
+	}
+	searchLocationRateHandler := search.NewSearchHandler(locationRateSearchBuilder.Search, locationRateType, locationRateFilterType, logError, nil)
 
 	// locationRateService := locationrate.NewLocationRateService(db)
 	locationRateService := rate.NewRateService(db, "locationrate", "id", "author", "rate", "review", "ratetime", "usefulcount", "replycount", "locationinfo", "id", "rate", "count", "score", pq.Array)
-	locationRateHandler := rate.NewRateHandler(locationRateService, modelStatus, log.LogError, validator.Validate, &action)
+	locationRateHandler := rate.NewRateHandler(locationRateService, 0, 1, 5)
 
 	// saved location
-	locationSaveService := savedlocation.NewSavedLocationService(db, "savedlocation", "id", "items", 50)
-	locationSaveHandler := savedlocation.NewSavedLocationHandler(locationSaveService, modelStatus, log.LogError, validator.Validate, &action)
 
+	// locationSaveService := savedlocation.NewSavedLocationService(db, "savedlocation", "id", "items", 50)
+	// locationSaveHandler := savedlocation.NewSavedLocationHandler(locationSaveService, modelStatus, log.LogError, validator.Validate, &action)
+	locationSaveService := saveditem.NewSaveService(db, reflect.TypeOf(location.Location{}), "savedlocation", "id", "items", 50, "location", "id", pq.Array)
+	locationSaveHandler := saveditem.NewSaveHandler(locationSaveService, 0, 1)
 	// follow location
 	locationFollowService := follow.NewFollowService(db, "locationfollower", "id", "follower", "locationfollowing", "id", "following", "userinfo", "id", "followercount", "followingcount")
-	locationFollowHandler := follow.NewFollowHandler(locationFollowService, modelStatus, log.LogError, validator.Validate, &action)
+	locationFollowHandler := follow.NewFollowHandler(locationFollowService, 0, 1)
 	// information location
 	locationInfomationType := reflect.TypeOf(locationinfomation.LocationInfomation{})
 	locationInfomationRepository, err := s.NewViewRepositoryWithArray(db, "locationinfomation", locationInfomationType, pq.Array)
@@ -438,21 +474,22 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// reaction location
 	locationReactionService := reaction.NewReactionService(db, "locationratereaction", "id", "author", "userid", "time", "reaction", "locationrate", "id", "author", "usefulcount")
-	locationReactionHandler := reaction.NewReactionHandler(locationReactionService, modelStatus, log.LogError, validator.Validate, &action)
+	locationReactionHandler := reaction.NewReactionHandler(locationReactionService, 0, 2, 3)
 
 	// comment location
 	locationCommentService := comment.NewCommentService(db, "locationcomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"locationrate", "id", "author", "replycount", pq.Array)
-	locationCommentHandler := comment.NewCommentHandler(locationCommentService, modelStatus, log.LogError, validator.Validate, &action)
+		"locationrate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	locationCommentHandler := commentmux.NewCommentHandler(locationCommentService, "commentId", "id", "author", "userId")
 
 	// search location
 	locationCommentType := reflect.TypeOf(searchcomment.Comment{})
-	queryLocationComment, _ := template.UseQueryWithArray(conf.Template, searchcomment.BuildCommentQuery, "locationcomment", templates, &locationCommentType, convert.ToMap, buildParam, pq.Array)
+	locationCommentFilterType := reflect.TypeOf(searchcomment.CommentFilter{})
+	queryLocationComment, _ := template.UseQueryWithArray(conf.Template, nil, "locationcomment", templates, &locationCommentType, convert.ToMap, buildParam, pq.Array)
 	locationCommentSearchBuilder, err := s.NewSearchBuilderWithArray(db, locationCommentType, queryLocationComment, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchLocationCommentHandler := searchcomment.NewSearchCommentHandler(locationCommentSearchBuilder.Search, log.LogError)
+	searchLocationCommentHandler := search.NewSearchHandler(locationCommentSearchBuilder.Search, locationCommentType, locationCommentFilterType, logError, nil)
 
 	// myarticlesType := reflect.TypeOf(myarticles.Article{})
 	// myarticlesQuery := query.UseQuery(myarticlesType)
@@ -500,41 +537,60 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	searchArticleCommentBuilder, err := s.NewSearchBuilderWithArray(db, searchArticleCommentType, searchArticleCommentQuery, pq.Array)
-	searchArticleRateCommentHandler := searchcomment.NewSearchCommentHandler(searchArticleCommentBuilder.Search, log.LogError)
-	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat", "articlerate", "id", "author", "replycount", pq.Array)
-	articleCommentHandler := comment.NewCommentHandler(articleCommentService, modelStatus, log.LogError, validator.Validate, &action)
+	if err != nil {
+		return nil, err
+	}
+	searchArticleRateCommentHandler := search.NewSearchHandler(searchArticleCommentBuilder.Search, reflect.TypeOf(searchcomment.Comment{}), reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
+
+	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat", "articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	articleCommentHandler := commentmux.NewCommentHandler(articleCommentService, "commentId", "id", "author", "userId")
 
 	articleRateService := rate.NewRateService(db, "articlerate", "id", "author", "rate", "review", "time", "usefulcount",
 		"replycount", "articleinfo", "id", "rate", "count", "score", pq.Array)
-	articleRateHandler := rate.NewRateHandler(articleRateService, modelStatus, log.LogError, validator.Validate, &action)
+	articleRateHandler := rate.NewRateHandler(articleRateService, 0, 1, 5)
 
-	articleRateType := reflect.TypeOf(rate.Rate{})
+	articleRateType := reflect.TypeOf(searchrate.Rate{})
+	articleRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
 	articleRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlerate", templates, &articleRateType, convert.ToMap, buildParam, pq.Array)
-	articleRateSearchBuilder, err := s.NewSearchBuilder(db, articleRateType, articleRateQuery)
-	articleRateSearchHandler := searchrate.NewRateSearchHandler(articleRateSearchBuilder.Search, log.LogError)
+	if err != nil {
+		return nil, err
+	}
+	articleRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, articleRateType, articleRateQuery, pq.Array)
+	if err != nil {
+		return nil, err
+	}
+	articleRateSearchHandler := search.NewSearchHandler(articleRateSearchBuilder.Search, articleRateType, articleRateFilterType, logError, nil)
 
 	articleRateReactionService := reaction.NewReactionService(db, "articleratereaction", "id", "author", "userid", "time", "reaction", "articlerate", "id", "author", "usefulcount")
-	articleRateReactionHandler := reaction.NewReactionHandler(articleRateReactionService, modelStatus, log.LogError, validator.Validate, &action)
-
-	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userId", "updatedat",
-		"articlecomment", "commentId", "articlecommentthreadInfo", "commentId", "articlecommentinfo", "commentId", "reaction", "commentId", "articlecommentreaction", "commentId")
+	articleRateReactionHandler := reaction.NewReactionHandler(articleRateReactionService, 0, 2, 3)
 	articleCommentThreadType := reflect.TypeOf(commentthread.CommentThread{})
-	articleCommentThreadQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlecommentthread", templates, &articleCommentThreadType, convert.ToMap, buildParam, pq.Array)
+	articleCommentThreadQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlecommentthread", templates, &articleCommentThreadType, convert.ToMap, buildParam)
 	if err != nil {
 		return nil, err
 	}
-	articleCommentThreadSearchBuilder, err := s.NewSearchBuilder(db, articleCommentThreadType, articleCommentThreadQuery)
+	articleCommentthreadBuilder, err := s.NewSearchBuilderWithArray(db, articleCommentThreadType, articleCommentThreadQuery, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	articleCommentThreadHandler := commentthread.NewCommentThreadHandler(articleCommentThreadService, articleCommentThreadSearchBuilder.Search, log.LogError, nil, generateId, validator.Validate, modelStatus, action)
+	articleCommentThreadSearchHandler := search.NewSearchHandler(articleCommentthreadBuilder.Search, articleCommentThreadType, reflect.TypeOf(commentthread.CommentThreadFilter{}), logError, nil)
+
+	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", pq.Array)
+	articleCommentThreadReplyHandler := muxcomment.NewCommentHandler(articleCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
+	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
+		"articlecomment", "commentid", "commentthreadid", "articlecommentthreadinfo", "commentid",
+		"articlecommentinfo", "commentid", "articlecommentthreadreaction", "commentid", "articlecommentreaction", "commentId")
+	articleCommentThreadHandler := muxcommentthread.NewCommentThreadHandler(articleCommentThreadService, shortid.Generate, "commentId", "author", "id")
+	articleCommentThreadReactionService := commentthreadreaction.NewCommentReactionService(db, "articlecommentthreadreaction", "commentId", "author", "userId", "time", "reaction", "articlecommentthreadinfo", "commentId", "usefulcount")
+	articleCommentThreadReactionHandnler := commentthreadreaction.NewCommentReactionHandler(articleCommentThreadReactionService, 3, 2, 0)
+	articleCommentThreadReplyReactionService := commentthreadreaction.NewCommentReactionService(db, "articlecommentreaction", "commentId", "author", "userId", "time", "reaction", "articlecommentinfo", "commentId", "usefulcount")
+	articleCommentThreadReplyReactionHandler := commentthreadreaction.NewCommentReactionHandler(articleCommentThreadReplyReactionService, 3, 2, 0)
 	// Follow
 	followService := follow.NewFollowService(
 		db,
 		"userfollower", "id", "follower",
 		"userfollowing", "id", "following",
 		"userinfo", "id", "followercount", "followingcount")
-	followHandler := follow.NewFollowHandler(followService, modelStatus, log.LogError, validator.Validate, &action)
+	followHandler := follow.NewFollowHandler(followService, 0, 1)
 
 	// Userinfomation
 	userinfoType := reflect.TypeOf(userinfomation.UserInfomation{})
@@ -567,25 +623,25 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	commentService := comment.NewCommentService(
 		db,
 		"filmratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"filmrate", "id", "author", "replycount",
+		"filmrate", "id", "author", "replycount", "users", "id", "imageurl", "username",
 		pq.Array)
-	commentHandler := comment.NewCommentHandler(commentService, modelStatus, log.LogError, validator.Validate, &action)
+	commentHandler := commentmux.NewCommentHandler(commentService, "commentId", "id", "author", "userId")
 
 	//Film SearchComment
 	commentType := reflect.TypeOf(searchcomment.Comment{})
-	queryComment, _ := template.UseQueryWithArray(conf.Template, searchcomment.BuildCommentQuery, "comment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
+	queryComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
 	commentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryComment, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchCommentHandler := searchcomment.NewSearchCommentHandler(commentSearchBuilder.Search, log.LogError)
+	searchCommentHandler := search.NewSearchHandler(commentSearchBuilder.Search, commentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
 
 	// Film Reaction
 	reactionService := reaction.NewReactionService(
 		db,
 		"filmratereaction", "id", "author", "userid", "time", "reaction",
 		"filmrate", "id", "author", "usefulcount")
-	reactionHandler := reaction.NewReactionHandler(reactionService, modelStatus, log.LogError, validator.Validate, &action)
+	reactionHandler := reaction.NewReactionHandler(reactionService, 0, 2, 3)
 
 	// Film Rate
 	rateService := rate.NewRateService(
@@ -593,20 +649,21 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"filmrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
 		"filmrateinfo", "id", "rate", "count", "score",
 		pq.Array)
-	rateHandler := rate.NewRateHandler(rateService, modelStatus, log.LogError, validator.Validate, &action)
+	rateHandler := rate.NewRateHandler(rateService, 0, 1, 5)
 
 	//Film Search Rate
 	rateType := reflect.TypeOf(searchrate.Rate{})
-	queryRate, _ := template.UseQueryWithArray(conf.Template, searchrate.BuildRateQuery, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
+	rateFilterType := reflect.TypeOf(searchrate.RateFilter{})
+	queryRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	rateSearchBuilder, err := s.NewSearchBuilderWithArray(db, rateType, queryRate, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchRateHandler := searchrate.NewRateSearchHandler(rateSearchBuilder.Search, log.LogError)
+	searchRateHandler := search.NewSearchHandler(rateSearchBuilder.Search, rateType, rateFilterType, log.LogError, nil)
 
 	// Item
 	itemType := reflect.TypeOf(item.Item{})
-	queryItem, _ := template.UseQueryWithArray(conf.Template, item.BuildItemQuery, "item", templates, &itemType, convert.ToMap, buildParam, pq.Array)
+	queryItem, _ := template.UseQueryWithArray(conf.Template, nil, "item", templates, &itemType, convert.ToMap, buildParam, pq.Array)
 	itemSearchBuilder, err := s.NewSearchBuilderWithArray(db, itemType, queryItem, pq.Array)
 	if err != nil {
 		return nil, err
@@ -620,28 +677,28 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// saveService := save.NewSaveService(db, "saveditem", "id", "items", 50)
 	// saveHandler := save.NewSaveHandler(saveService, modelStatus, log.LogError, validator.Validate, &action)
-	saveditemService := saveditem.NewSavedItemService(db, "saveditem", "id", "items", 50)
-	savedItemHandler := saveditem.NewSavedItemHandler(saveditemService, modelStatus, log.LogError, validator.Validate, &action)
+	saveditemService := saveditem.NewSaveService(db, itemType, "saveditem", "id", "items", 50, "item", "id", pq.Array)
+	savedItemHandler := saveditem.NewSaveHandler(saveditemService, 1, 0)
 	// Item Response
 	responseService := response.NewResponseService(
 		db,
 		"itemresponse", "id", "author", "description", "time", "usefulcount", "replycount",
 		"itemresponseinfo", "id", "count",
 		pq.Array)
-	responseHandler := response.NewResponseHandler(responseService, modelStatus, log.LogError, validator.Validate, &action)
+	responseHandler := response.NewResponseHandler(responseService, "id", "author")
 
 	// Item Search Response
 	responseType := reflect.TypeOf(searchresponse.Response{})
-	queryResponse, _ := template.UseQueryWithArray(conf.Template, searchresponse.BuildResponseQuery, "itemresponse", templates, &responseType, convert.ToMap, buildParam, pq.Array)
+	queryResponse, _ := template.UseQueryWithArray(conf.Template, nil, "itemresponse", templates, &responseType, convert.ToMap, buildParam, pq.Array)
 	responseSearchBuilder, err := s.NewSearchBuilderWithArray(db, responseType, queryResponse, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchResponseHandler := searchresponse.NewSearchResponseHandler(responseSearchBuilder.Search, log.LogError)
+	searchResponseHandler := search.NewSearchHandler(responseSearchBuilder.Search, responseType, reflect.TypeOf(searchresponse.ResponseFilter{}), logError, nil)
 
 	// My Item
 	myitemType := reflect.TypeOf(myitem.Item{})
-	queryMyItem, _ := template.UseQueryWithArray(conf.Template, myitem.BuildMyItemQuery, "item", templates, &myitemType, convert.ToMap, buildParam, pq.Array)
+	queryMyItem, _ := template.UseQueryWithArray(conf.Template, nil, "item", templates, &myitemType, convert.ToMap, buildParam, pq.Array)
 	myItemSearchBuilder, err := s.NewSearchBuilderWithArray(db, myitemType, queryMyItem, pq.Array)
 	if err != nil {
 		return nil, err
@@ -683,7 +740,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// savedfilmService := film.NewSavedFilmService(db, "savedfilm", "items", "id", 50)
 	// savedFilmHandler := film.NewSavedFilmHanlder(savedfilmService)
 	savedfilmService := save.NewSaveService(db, "savedfilm", "id", "item", 50)
-	savedfilmHandler := save.NewSaveHandler(savedfilmService, modelStatus, log.LogError, validator.Validate, &action)
+	savedfilmHandler := save.NewSaveHandler(savedfilmService, 0, 1)
 	// Filmcategory
 	filmCategoryType := reflect.TypeOf(category.Category{})
 	filmCategoryQuery := sq.UseQuery(db, "filmcategory", filmCategoryType)
@@ -739,7 +796,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 
 	companyType := reflect.TypeOf(company.Company{})
-	companySearchQuery := sq.UseQuery(db, "company", companyType)
+	companySearchQuery, err := template.UseQueryWithArray(conf.Template, nil, "company", templates, &companyType, convert.ToMap, buildParam, pq.Array)
+	if err != nil {
+		return nil, err
+	}
 	companySearchBuilder, err := s.NewSearchBuilderWithArray(db, companyType, companySearchQuery, pq.Array)
 	if err != nil {
 		return nil, err
@@ -773,6 +833,9 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	roomSearchQuery, err := template.UseQueryWithArray(conf.Template, nil, "room", templates, &typeRoom, convert.ToMap, buildParam, pq.Array)
+	if err != nil {
+		return nil, err
+	}
 	roomSearchBuilder, err := s.NewSearchBuilderWithArray(db, typeRoom, roomSearchQuery, pq.Array)
 	if err != nil {
 		return nil, err
@@ -810,28 +873,31 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	cinemaSearchBuilder, err := s.NewSearchBuilderWithArray(db, cinemaType, cinemaSearchQuery, pq.Array)
+	if err != nil {
+		return nil, err
+	}
 	cinemaHandler := cinema.NewCinemaHandler(cinemaSearchBuilder.Search, nil, cinemaService, log.LogError, validator.Validate, modelStatus, action)
 
 	cinemaCommentService := comment.NewCommentService(
 		db,
 		"cinemaratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"cinemarate", "id", "author", "replycount",
+		"cinemarate", "id", "author", "replycount", "users", "id", "imageurl", "username",
 		pq.Array)
-	cinemaCommentHandler := comment.NewCommentHandler(cinemaCommentService, modelStatus, log.LogError, validator.Validate, &action)
+	cinemaCommentHandler := commentmux.NewCommentHandler(cinemaCommentService, "commentId", "id", "author", "userId")
 	// SearchCommentCinema
 	cinemaCommentType := reflect.TypeOf(searchcomment.Comment{})
-	queryCinemaComment, _ := template.UseQueryWithArray(conf.Template, searchcomment.BuildCommentQuery, "comment", templates, &cinemaCommentType, convert.ToMap, buildParam, pq.Array)
+	queryCinemaComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &cinemaCommentType, convert.ToMap, buildParam, pq.Array)
 	cinemaCommentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryCinemaComment, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchCinemaCommentHandler := searchcomment.NewSearchCommentHandler(cinemaCommentSearchBuilder.Search, log.LogError)
+	searchCinemaCommentHandler := search.NewSearchHandler(cinemaCommentSearchBuilder.Search, cinemaCommentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
 	// Cinema Reaction
 	cinemaReactionService := reaction.NewReactionService(
 		db,
 		"cinemaratereaction", "id", "author", "userid", "time", "reaction",
 		"cinemarate", "id", "author", "usefulcount")
-	cinemaReactionHandler := reaction.NewReactionHandler(cinemaReactionService, modelStatus, log.LogError, validator.Validate, &action)
+	cinemaReactionHandler := reaction.NewReactionHandler(cinemaReactionService, 0, 2, 3)
 
 	// Cinema Rate
 	cinemaRateService := rate.NewRateService(
@@ -839,17 +905,17 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"cinemarate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
 		"cinemarateinfo", "id", "rate", "count", "score",
 		pq.Array)
-	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, modelStatus, log.LogError, validator.Validate, &action)
+	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, 0, 1, 5)
 
 	//Cinema Search Rate
 	cinemaRateType := reflect.TypeOf(searchrate.Rate{})
-	queryCinemaRate, _ := template.UseQueryWithArray(conf.Template, searchrate.BuildRateQuery, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
+	cinemaRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
+	queryCinemaRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	cinemaRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, cinemaRateType, queryCinemaRate, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchCinemaRateHandler := searchrate.NewRateSearchHandler(cinemaRateSearchBuilder.Search, log.LogError)
-
+	searchCinemaRateHandler := search.NewSearchHandler(cinemaRateSearchBuilder.Search, cinemaRateType, cinemaRateFilterType, log.LogError, nil)
 	/////////////
 	// Backoffice - Film
 	bofilmType := reflect.TypeOf(bofilm.Film{})
@@ -932,22 +998,20 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	boCompanyHandler := bocompany.NewBackofficeCompanyHandler(bocompanySearchBuilder.Search, boCompanyService, log.LogError, nil, validator.Validate, modelStatus, action, boCompanyUploadService, conf.KeyFile, generateId)
 
 	// rate company
-	// companyRateService := rate.NewRateService(db, "companyrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
-	// 	"companyratefullinfo", "id", "rate", "count", "score", pq.Array)
-	// companyRateHandler := rate.NewRateHandler(companyRateService, modelStatus, log.LogError, validator.Validate, &action)
-	companyRateService := criteria.NewRateCriteriaService(db, 5,
+	companyRateService := rates.NewRatesService(db, 5,
 		"companyrate", "id", "rate", "rates", "review", "author", "time", "usefulcount", "replycount",
 		"companyratefullinfo", "id", "score", "count", "rate", []string{"companyrateinfo01", "companyrateinfo02", "companyrateinfo03", "companyrateinfo04", "companyrateinfo05"}, "id", "rate", "count", "score")
-	companyRateHandler := criteria.NewRateCriteriaHandler(companyRateService, modelStatus, log.LogError, validator.Validate, &action)
+	companyRateHandler := rates.NewRatesHandler(companyRateService, 0, 1, 5)
 
 	companyReactionService := reaction.NewReactionService(db, "companyratereaction", "id", "author", "userid", "time", "reaction",
 		"companyrate", "id", "author", "usefulcount")
-	companyReactionHandler := reaction.NewReactionHandler(companyReactionService, modelStatus, log.LogError, validator.Validate, &action)
+	companyReactionHandler := reaction.NewReactionHandler(companyReactionService, 0, 2, 3)
 
-	companyCommentService := comment.NewCommentService(db, "companycomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat", "companyrate", "id", "author", "replycount", pq.Array)
-	companyCommentHandler := comment.NewCommentHandler(companyCommentService, modelStatus, log.LogError, validator.Validate, &action)
+	companyCommentService := comment.NewCommentService(db, "companycomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat", "companyrate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	companyCommentHandler := commentmux.NewCommentHandler(companyCommentService, "commentId", "id", "author", "userId")
 	// company search rate
-	companyRateType := reflect.TypeOf(searchrate.RateCriteria{})
+	companyRateType := reflect.TypeOf(searchrate.Rates{})
+	companyRateFilterType := reflect.TypeOf(searchrate.RatesFilter{})
 	queryCompanyRate, err := template.UseQueryWithArray(conf.Template, nil, "companyrate", templates, &companyRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
 		return nil, err
@@ -956,17 +1020,16 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchCompanyRateHandler := searchrate.NewRateCriteriaSearchHandler(companyRateSearchBuilder.Search, log.LogError)
-
+	searchCompanyRateHandler := search.NewSearchHandler(companyRateSearchBuilder.Search, companyRateType, companyRateFilterType, logError, nil)
 	// SearchComment Company
 	companyCommentType := reflect.TypeOf(searchcomment.Comment{})
-	queryCompanyComment, _ := template.UseQueryWithArray(conf.Template, searchcomment.BuildCommentQuery, "comment", templates, &companyCommentType, convert.ToMap, buildParam, pq.Array)
+	queryCompanyComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &companyCommentType, convert.ToMap, buildParam, pq.Array)
 	companyCommentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryCompanyComment, pq.Array)
 	if err != nil {
 		return nil, err
 	}
 
-	searchCompanyCommentHandler := searchcomment.NewSearchCommentHandler(companyCommentSearchBuilder.Search, log.LogError)
+	searchCompanyCommentHandler := search.NewSearchHandler(companyCommentSearchBuilder.Search, companyCommentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
 
 	// Comment Company
 	// companyCommentService := comment.NewCommentService(db, "",)
@@ -983,6 +1046,9 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	boRoomRepository, err := s.NewRepositoryWithArray(db, "room", boRoomType, pq.Array)
+	if err != nil {
+		return nil, err
+	}
 	// Backoffice Location
 	boLocationType := reflect.TypeOf(bolocation.Location{})
 	boLocationRepository, err := s.NewRepositoryWithArray(db, "location", boLocationType, pq.Array)
@@ -1053,89 +1119,93 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	bomusicHandler := bomusic.NewBackofficeMusicHandler(bomusicSearchBuilder.Search, bomusicService, log.LogError, nil, validator.Validate, modelStatus, action)
 
 	app := ApplicationContext{
-		Health:         healthHandler,
-		Authentication: authenticationHandler,
-		SignOut:        signOutHandler,
-		Password:       passwordHandler,
-		SignUp:         signupHandler,
-		//OAuth2:                oauth2Handler,
-		User:                  userHandler,
-		MyProfile:             myProfileHandler,
-		Skill:                 skillHandler,
-		Interest:              interestHandler,
-		LookingFor:            lookingForHandler,
-		Education:             educationHandler,
-		Companies:             companiesHandler,
-		Work:                  workHandler,
-		Location:              locationHandler,
-		LocationRate:          locationRateHandler,
-		MyArticles:            myarticlesHandler,
-		Article:               articleHandler,
-		Appreciation:          appreciationHandler,
-		Follow:                followHandler,
-		Comment:               commentHandler,
-		Reaction:              reactionHandler,
-		Rate:                  rateHandler,
-		SearchRate:            searchRateHandler,
-		Response:              responseHandler,
-		SearchResponse:        searchResponseHandler,
-		SearchComment:         searchCommentHandler,
-		CinemaComment:         cinemaCommentHandler,
-		CinemaReaction:        cinemaReactionHandler,
-		CinemaRate:            cinemaRateHandler,
-		CinemaSearchRate:      searchCinemaRateHandler,
-		CinemaResponse:        responseHandler,
-		CinemaSearchResponse:  searchResponseHandler,
-		CinemaSearchComment:   searchCinemaCommentHandler,
-		Item:                  itemHandler,
-		MyItem:                myItemHandler,
-		Film:                  filmHandler,
-		Company:               companyHandler,
-		BackofficeCinema:      boCinemaHandler,
-		FilmCategory:          filmCategoryHandler,
-		CompanyCategory:       companyCategoryHandler,
-		ItemCategory:          itemCategoryHandler,
-		SavedFilm:             savedfilmHandler,
-		BackofficeFilm:        boFilmHandler,
-		Director:              directorHandler,
-		Cast:                  castHandler,
-		Country:               countryHander,
-		Production:            productionHandler,
-		BackofficeCompany:     boCompanyHandler,
-		Savedlocation:         locationSaveHandler,
-		FollowLocation:        locationFollowHandler,
-		LocationInfomation:    locationInfomationHandler,
-		SearchLocationRate:    searchLocationRateHandler,
-		LocationReaction:      locationReactionHandler,
-		LocationComment:       locationCommentHandler,
-		SearchLocationComment: searchLocationCommentHandler,
-		Job:                   jobHandler,
-		Room:                  roomHandler,
-		Music:                 musicHandler,
-		Playlist:              playlistHandler,
-		BackofficeRoom:        boRoomHandler,
-		BackofficeMusic:       bomusicHandler,
-		BackofficeJob:         boJobHandler,
-		BackofficeLocation:    boLocationHandler,
-		ArticleRate:           articleRateHandler,
-		ArticleRateSearch:     articleRateSearchHandler,
-		ArticleRateReaction:   articleRateReactionHandler,
-		ArticleComment:        articleCommentHandler,
-		SearchArticleComment:  searchArticleRateCommentHandler,
-		Cinema:                cinemaHandler,
-		SavedItem:             savedItemHandler,
-		CompanyRate:           companyRateHandler,
-		SearchCompanyRate:     searchCompanyRateHandler,
-		SearchCompanyComment:  searchCompanyCommentHandler,
-		CompanyReaction:       companyReactionHandler,
-		CompanyComment:        companyCommentHandler,
-		UserReact:             userReactHandler,
-		UserInfomation:        userInfomationHandler,
-		SearchUserRate:        searchUserRateHandler,
-		SearchUserRateComment: searchUserRateCommentHandler,
-		UserRate:              userRateHandler,
-		UserRateReaction:      userRateReactionHandler,
-		UserRateComment:       userRateCommentHandler,
+		Health:                            healthHandler,
+		Authentication:                    authenticationHandler,
+		SignOut:                           signOutHandler,
+		Password:                          passwordHandler,
+		SignUp:                            signupHandler,
+		User:                              userHandler,
+		MyProfile:                         myProfileHandler,
+		Skill:                             skillHandler,
+		Interest:                          interestHandler,
+		LookingFor:                        lookingForHandler,
+		Director:                          directorHandler,
+		Education:                         educationHandler,
+		Companies:                         companiesHandler,
+		Work:                              workHandler,
+		Cast:                              castHandler,
+		Country:                           countryHander,
+		Production:                        productionHandler,
+		Location:                          locationHandler,
+		LocationRate:                      locationRateHandler,
+		SearchLocationRate:                searchLocationRateHandler,
+		MyArticles:                        myarticlesHandler,
+		Article:                           articleHandler,
+		ArticleRate:                       articleRateHandler,
+		ArticleRateSearch:                 articleRateSearchHandler,
+		ArticleRateReaction:               articleRateReactionHandler,
+		Appreciation:                      appreciationHandler,
+		Follow:                            followHandler,
+		SavedItem:                         savedItemHandler,
+		Comment:                           commentHandler,
+		Reaction:                          reactionHandler,
+		Rate:                              rateHandler,
+		Response:                          responseHandler,
+		SearchRate:                        searchRateHandler,
+		SearchResponse:                    searchResponseHandler,
+		SearchComment:                     searchCommentHandler,
+		CinemaComment:                     cinemaCommentHandler,
+		CinemaReaction:                    cinemaReactionHandler,
+		CinemaRate:                        cinemaRateHandler,
+		CinemaResponse:                    responseHandler,
+		CinemaSearchRate:                  searchCinemaRateHandler,
+		CinemaSearchResponse:              searchResponseHandler,
+		CinemaSearchComment:               searchCinemaCommentHandler,
+		Item:                              itemHandler,
+		MyItem:                            myItemHandler,
+		Company:                           companyHandler,
+		Film:                              filmHandler,
+		BackofficeCinema:                  boCinemaHandler,
+		BackofficeFilm:                    boFilmHandler,
+		BackofficeCompany:                 boCompanyHandler,
+		FilmCategory:                      filmCategoryHandler,
+		CompanyCategory:                   companyCategoryHandler,
+		ItemCategory:                      itemCategoryHandler,
+		SavedFilm:                         savedfilmHandler,
+		Savedlocation:                     locationSaveHandler,
+		FollowLocation:                    locationFollowHandler,
+		LocationInfomation:                locationInfomationHandler,
+		LocationReaction:                  locationReactionHandler,
+		LocationComment:                   locationCommentHandler,
+		SearchLocationComment:             searchLocationCommentHandler,
+		BackofficeLocation:                boLocationHandler,
+		ArticleComment:                    articleCommentHandler,
+		SearchArticleComment:              searchArticleRateCommentHandler,
+		SearchArticleCommentThread:        articleCommentThreadSearchHandler,
+		Cinema:                            cinemaHandler,
+		SearchCompanyRate:                 searchCompanyRateHandler,
+		SearchCompanyComment:              searchCompanyCommentHandler,
+		Job:                               jobHandler,
+		Room:                              roomHandler,
+		Music:                             musicHandler,
+		Playlist:                          playlistHandler,
+		BackofficeRoom:                    boRoomHandler,
+		BackofficeMusic:                   bomusicHandler,
+		BackofficeJob:                     boJobHandler,
+		CompanyRate:                       companyRateHandler,
+		CompanyReaction:                   companyReactionHandler,
+		CompanyComment:                    companyCommentHandler,
+		UserReact:                         userReactHandler,
+		UserInfomation:                    userInfomationHandler,
+		SearchUserRate:                    searchUserRateHandler,
+		SearchUserRateComment:             searchUserRateCommentHandler,
+		UserRate:                          userRateHandler,
+		UserRateReaction:                  userRateReactionHandler,
+		UserRateComment:                   userRateCommentHandler,
+		ArticleCommentThreadHandler:       articleCommentThreadHandler,
+		ArticleCommentThreadReplyHandler:  articleCommentThreadReplyHandler,
+		ArticleCommentThreadReaction:      articleCommentThreadReactionHandnler,
+		ArticleCommentThreadReplyReaction: articleCommentThreadReplyReactionHandler,
 	}
 	return &app, nil
 }
