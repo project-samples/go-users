@@ -16,7 +16,7 @@ type Company struct {
 	EstablishedAt *time.Time          `json:"established_at" gorm:"column:establishedat" dynamodbav:"establishedat" firestore:"establishedat" `
 	Categories    []string            `json:"categories" gorm:"column:categories" dynamodbav:"categories" firestore:"categories"`
 	Info          *Info               `json:"info,omitempty" gorm:"-" dynamodbav:"info" firestore:"info"`
-	ImageURL      string              `json:"imageURL,omitempty" gorm:"column:imageurl" validate:"max=300"`
+	ImageURL      *string             `json:"imageURL,omitempty" gorm:"column:imageurl" validate:"max=300"`
 	Gallery       []upload.UploadInfo `json:"gallery,omitempty" gorm:"column:gallery" bson:"gallery,omitempty" dynamodbav:"gallery,omitempty" firestore:"gallery,omitempty"`
 	CoverURL      *string             `json:"coverURL,omitempty" gorm:"column:coverurl"`
 }

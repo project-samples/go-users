@@ -718,8 +718,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// Film
 	filmType := reflect.TypeOf(film.Film{})
 	// filmQuery := sq.UseQuery(db, "film", filmType)
-	filmQuery, _ := template.UseQueryWithArray(conf.Template, nil, "film", templates, &filmType, convert.ToMap, buildParam, pq.Array)
-
+	filmQuery, err := template.UseQueryWithArray(conf.Template, nil, "film", templates, &filmType, convert.ToMap, buildParam, pq.Array)
+	if err != nil {
+		return nil, err
+	}
 	filmSearchBuilder, err := s.NewSearchBuilderWithArray(db, filmType, filmQuery, pq.Array)
 	if err != nil {
 		return nil, err
