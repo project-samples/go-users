@@ -8,6 +8,7 @@ import (
 	muxcomment "go-service/internal/commentthread/comment/mux"
 	muxcommentthread "go-service/internal/commentthread/mux"
 	commentthreadreaction "go-service/internal/commentthread/reaction"
+	"go-service/internal/userinfo"
 	"reflect"
 
 	. "github.com/core-go/auth"
@@ -24,7 +25,6 @@ import (
 	mgo "github.com/core-go/mongo"
 	. "github.com/core-go/password"
 	sqlpm "github.com/core-go/password/sql"
-
 	// "github.com/core-go/rate"
 	// "github.com/core-go/rate/rates"
 	// searchrate "github.com/core-go/rate/search"
@@ -163,33 +163,40 @@ type ApplicationContext struct {
 	SearchLocationComment *search.SearchHandler
 	BackofficeLocation    bolocation.BackOfficeLocationHandler
 
-	ArticleComment                    commentmux.CommentHandler
-	ArticleCommentThreadHandler       muxcommentthread.CommentThreadHandler
-	ArticleCommentThreadReplyHandler  muxcomment.CommentHandler
-	SearchArticleComment              *search.SearchHandler
-	SearchArticleCommentThread        *search.SearchHandler
-	Cinema                            cinema.CinemaHandler
-	SearchCompanyRate                 *search.SearchHandler
-	SearchCompanyComment              *search.SearchHandler
-	Job                               job.JobHandler
-	Room                              room.RoomHandler
-	Music                             music.MusicHandler
-	Playlist                          playlist.PlaylistHandler
-	BackofficeRoom                    boroom.BackofficeRoomHandler
-	BackofficeMusic                   bomusic.BackofficeMusicHandler
-	BackofficeJob                     bojob.BackofficeJobHandler
-	CompanyRate                       rates.RatesHandler
-	CompanyReaction                   reaction.ReactionHandler
-	CompanyComment                    commentmux.CommentHandler
-	UserReact                         userreaction.UserReactionHandler
-	UserInfomation                    userinfomation.UserInfomationHandler
-	SearchUserRate                    *search.SearchHandler
-	SearchUserRateComment             *search.SearchHandler
-	UserRate                          rate.RateHandler
-	UserRateReaction                  reaction.ReactionHandler
-	UserRateComment                   commentmux.CommentHandler
-	ArticleCommentThreadReaction      commentthreadreaction.CommentReactionHandler
-	ArticleCommentThreadReplyReaction commentthreadreaction.CommentReactionHandler
+	ArticleComment                        commentmux.CommentHandler
+	ArticleCommentThreadHandler           muxcommentthread.CommentThreadHandler
+	FilmCommentThreadHandler              muxcommentthread.CommentThreadHandler
+	ArticleCommentThreadReplyHandler      muxcomment.CommentHandler
+	FilmCommentThreadReplyHandler         muxcomment.CommentHandler
+	SearchArticleComment                  *search.SearchHandler
+	SearchArticleCommentThread            *search.SearchHandler
+	SearchFilmCommentThread               *search.SearchHandler
+	Cinema                                cinema.CinemaHandler
+	SearchCompanyRate                     *search.SearchHandler
+	SearchCompanyComment                  *search.SearchHandler
+	Job                                   job.JobHandler
+	Room                                  room.RoomHandler
+	Music                                 music.MusicHandler
+	Playlist                              playlist.PlaylistHandler
+	BackofficeRoom                        boroom.BackofficeRoomHandler
+	BackofficeMusic                       bomusic.BackofficeMusicHandler
+	BackofficeJob                         bojob.BackofficeJobHandler
+	CompanyRate                           rates.RatesHandler
+	CompanyReaction                       reaction.ReactionHandler
+	CompanyComment                        commentmux.CommentHandler
+	UserReact                             userreaction.UserReactionHandler
+	UserInfomation                        userinfomation.UserInfomationHandler
+	SearchUserRate                        *search.SearchHandler
+	SearchUserRateComment                 *search.SearchHandler
+	UserRate                              rate.RateHandler
+	UserRateReaction                      reaction.ReactionHandler
+	UserRateComment                       commentmux.CommentHandler
+	ArticleCommentThreadReaction          commentthreadreaction.CommentReactionHandler
+	FilmCommentThreadReaction             commentthreadreaction.CommentReactionHandler
+	FilmCommentThreadReactionHandnler     commentthreadreaction.CommentReactionHandler
+	ArticleCommentThreadReplyReaction     commentthreadreaction.CommentReactionHandler
+	FilmCommentThreadReplyReactionHandler commentthreadreaction.CommentReactionHandler
+	FilmCommentThreadReplyReaction        commentthreadreaction.CommentReactionHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
@@ -347,8 +354,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	searchUserRateHandler := search.NewSearchHandler(userRateSearchBuilder.Search, userRateType, userRateFilterType, log.LogError, nil)
 
 	// user rate comment
-	userRateCommentService := comment.NewCommentService(db, "userratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"userrate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	userRateCommentService := comment.NewCommentService(db, "userratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "userrate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	userRateCommentHandler := commentmux.NewCommentHandler(userRateCommentService, "commentId", "id", "author", "userId")
 	// search user rate comment
 	searchUserRateCommentType := reflect.TypeOf(searchcomment.Comment{})
@@ -395,6 +401,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	myProfileService := myprofile.NewUserService(myProfileRepository)
 	myProfileHandler := myprofile.NewMyProfileHandler(myProfileService, log.LogError, nil, skillService.Save, interestService.Save, lookingForService.Save,
 		educationService.Save, companiesService.Save, workService.Save, uploadService, conf.KeyFile, generateId)
+	// user info
+	loadUserInfo := userinfo.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
 
 	// LOCATION
 
@@ -477,8 +485,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	locationReactionHandler := reaction.NewReactionHandler(locationReactionService, 0, 2, 3)
 
 	// comment location
-	locationCommentService := comment.NewCommentService(db, "locationcomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"locationrate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	locationCommentService := comment.NewCommentService(db, "locationcomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "locationrate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	locationCommentHandler := commentmux.NewCommentHandler(locationCommentService, "commentId", "id", "author", "userId")
 
 	// search location
@@ -542,7 +549,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	searchArticleRateCommentHandler := search.NewSearchHandler(searchArticleCommentBuilder.Search, reflect.TypeOf(searchcomment.Comment{}), reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
 
-	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat", "articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	articleCommentHandler := commentmux.NewCommentHandler(articleCommentService, "commentId", "id", "author", "userId")
 
 	articleRateService := rate.NewRateService(db, "articlerate", "id", "author", "rate", "review", "time", "usefulcount",
@@ -574,7 +581,34 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	articleCommentThreadSearchHandler := search.NewSearchHandler(articleCommentthreadBuilder.Search, articleCommentThreadType, reflect.TypeOf(commentthread.CommentThreadFilter{}), logError, nil)
 
-	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", pq.Array)
+	// ------------- FILM-------------
+	commentThreadType := reflect.TypeOf(commentthread.CommentThread{})
+	filmCommentThreadQuery, err := template.UseQueryWithArray(conf.Template, nil, "filmcommentthread", templates, &commentThreadType, convert.ToMap, buildParam)
+	if err != nil {
+		return nil, err
+	}
+	filmCommentthreadBuilder, err := s.NewSearchBuilderWithArray(db, commentThreadType, filmCommentThreadQuery, pq.Array)
+	if err != nil {
+		return nil, err
+	}
+	filmCommentThreadSearchHandler := search.NewSearchHandler(filmCommentthreadBuilder.Search, commentThreadType, reflect.TypeOf(commentthread.CommentThreadFilter{}), logError, nil)
+	//loadUserInfo := rateuser.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+
+	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmcomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
+	filmCommentThreadReplyHandler := muxcomment.NewCommentHandler(filmCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
+	filmCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "filmcommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
+		"filmcomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
+		"filmcommentinfo", "commentid", "filmcommentthreadreaction", "commentid", "filmcommentreaction", "commentId")
+	filmCommentThreadHandler := muxcommentthread.NewCommentThreadHandler(filmCommentThreadService, shortid.Generate, "commentId", "author", "id")
+
+	filmCommentThreadReactionService := commentthreadreaction.NewCommentReactionService(db, "filmcommentthreadreaction", "commentid", "author", "userId", "time", "reaction", "filmcommentthreadinfo", "commentId", "usefulcount")
+	filmCommentThreadReactionHandnler := commentthreadreaction.NewCommentReactionHandler(filmCommentThreadReactionService, 3, 2, 0)
+	filmCommentThreadReplyReactionService := commentthreadreaction.NewCommentReactionService(db, "filmcommentreaction", "commentId", "author", "userId", "time", "reaction", "filmcommentinfo", "commentId", "usefulcount")
+	filmCommentThreadReplyReactionHandler := commentthreadreaction.NewCommentReactionHandler(filmCommentThreadReplyReactionService, 3, 2, 0)
+
+	// ------------- FILM-------------
+
+	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
 	articleCommentThreadReplyHandler := muxcomment.NewCommentHandler(articleCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
 		"articlecomment", "commentid", "commentthreadid", "articlecommentthreadinfo", "commentid",
@@ -622,19 +656,20 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	//Film Comment
 	commentService := comment.NewCommentService(
 		db,
-		"filmratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"filmrate", "id", "author", "replycount", "users", "id", "imageurl", "username",
-		pq.Array)
+		"filmratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat",
+		"filmrate", "id", "author", "replycount", "users", "id", "imageurl", "username", loadUserInfo.Load, pq.Array)
 	commentHandler := commentmux.NewCommentHandler(commentService, "commentId", "id", "author", "userId")
 
-	//Film SearchComment
+	// SearchComment
 	commentType := reflect.TypeOf(searchcomment.Comment{})
-	queryComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
+	queryComment, _ := template.UseQueryWithArray(conf.Template, nil, "filmratecomment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
+
 	commentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryComment, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	searchCommentHandler := search.NewSearchHandler(commentSearchBuilder.Search, commentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
+	filmRateCommentService := film.NewFilmSearchService(commentSearchBuilder.Search, loadUserInfo.Load)
+	searchCommentHandler := search.NewSearchHandler(filmRateCommentService.Search, commentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
 
 	// Film Reaction
 	reactionService := reaction.NewReactionService(
@@ -649,7 +684,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"filmrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
 		"filmrateinfo", "id", "rate", "count", "score",
 		pq.Array)
-	rateHandler := rate.NewRateHandler(rateService, 0, 1, 5)
+	rateHandler := rate.NewRateHandler(rateService, 0, 1, 10)
 
 	//Film Search Rate
 	rateType := reflect.TypeOf(searchrate.Rate{})
@@ -880,11 +915,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	cinemaHandler := cinema.NewCinemaHandler(cinemaSearchBuilder.Search, nil, cinemaService, log.LogError, validator.Validate, modelStatus, action)
 
-	cinemaCommentService := comment.NewCommentService(
-		db,
-		"cinemaratecomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat",
-		"cinemarate", "id", "author", "replycount", "users", "id", "imageurl", "username",
-		pq.Array)
+	cinemaCommentService := comment.NewCommentService(db, "cinemaratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "cinemarate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	cinemaCommentHandler := commentmux.NewCommentHandler(cinemaCommentService, "commentId", "id", "author", "userId")
 	// SearchCommentCinema
 	cinemaCommentType := reflect.TypeOf(searchcomment.Comment{})
@@ -1009,7 +1040,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"companyrate", "id", "author", "usefulcount")
 	companyReactionHandler := reaction.NewReactionHandler(companyReactionService, 0, 2, 3)
 
-	companyCommentService := comment.NewCommentService(db, "companycomment", "commentid", "id", "author", "userid", "comment", "time", "updatedat", "companyrate", "id", "author", "replycount", "users", "id", "imageurl", "username", pq.Array)
+	companyCommentService := comment.NewCommentService(db, "companycomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "companyrate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	companyCommentHandler := commentmux.NewCommentHandler(companyCommentService, "commentId", "id", "author", "userId")
 	// company search rate
 	companyRateType := reflect.TypeOf(searchrate.Rates{})
@@ -1121,93 +1152,99 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	bomusicHandler := bomusic.NewBackofficeMusicHandler(bomusicSearchBuilder.Search, bomusicService, log.LogError, nil, validator.Validate, modelStatus, action)
 
 	app := ApplicationContext{
-		Health:                            healthHandler,
-		Authentication:                    authenticationHandler,
-		SignOut:                           signOutHandler,
-		Password:                          passwordHandler,
-		SignUp:                            signupHandler,
-		User:                              userHandler,
-		MyProfile:                         myProfileHandler,
-		Skill:                             skillHandler,
-		Interest:                          interestHandler,
-		LookingFor:                        lookingForHandler,
-		Director:                          directorHandler,
-		Education:                         educationHandler,
-		Companies:                         companiesHandler,
-		Work:                              workHandler,
-		Cast:                              castHandler,
-		Country:                           countryHander,
-		Production:                        productionHandler,
-		Location:                          locationHandler,
-		LocationRate:                      locationRateHandler,
-		SearchLocationRate:                searchLocationRateHandler,
-		MyArticles:                        myarticlesHandler,
-		Article:                           articleHandler,
-		ArticleRate:                       articleRateHandler,
-		ArticleRateSearch:                 articleRateSearchHandler,
-		ArticleRateReaction:               articleRateReactionHandler,
-		Appreciation:                      appreciationHandler,
-		Follow:                            followHandler,
-		SavedItem:                         savedItemHandler,
-		Comment:                           commentHandler,
-		Reaction:                          reactionHandler,
-		Rate:                              rateHandler,
-		Response:                          responseHandler,
-		SearchRate:                        searchRateHandler,
-		SearchResponse:                    searchResponseHandler,
-		SearchComment:                     searchCommentHandler,
-		CinemaComment:                     cinemaCommentHandler,
-		CinemaReaction:                    cinemaReactionHandler,
-		CinemaRate:                        cinemaRateHandler,
-		CinemaResponse:                    responseHandler,
-		CinemaSearchRate:                  searchCinemaRateHandler,
-		CinemaSearchResponse:              searchResponseHandler,
-		CinemaSearchComment:               searchCinemaCommentHandler,
-		Item:                              itemHandler,
-		MyItem:                            myItemHandler,
-		Company:                           companyHandler,
-		Film:                              filmHandler,
-		BackofficeCinema:                  boCinemaHandler,
-		BackofficeFilm:                    boFilmHandler,
-		BackofficeCompany:                 boCompanyHandler,
-		FilmCategory:                      filmCategoryHandler,
-		CompanyCategory:                   companyCategoryHandler,
-		ItemCategory:                      itemCategoryHandler,
-		SavedFilm:                         savedfilmHandler,
-		Savedlocation:                     locationSaveHandler,
-		FollowLocation:                    locationFollowHandler,
-		LocationInfomation:                locationInfomationHandler,
-		LocationReaction:                  locationReactionHandler,
-		LocationComment:                   locationCommentHandler,
-		SearchLocationComment:             searchLocationCommentHandler,
-		BackofficeLocation:                boLocationHandler,
-		ArticleComment:                    articleCommentHandler,
-		SearchArticleComment:              searchArticleRateCommentHandler,
-		SearchArticleCommentThread:        articleCommentThreadSearchHandler,
-		Cinema:                            cinemaHandler,
-		SearchCompanyRate:                 searchCompanyRateHandler,
-		SearchCompanyComment:              searchCompanyCommentHandler,
-		Job:                               jobHandler,
-		Room:                              roomHandler,
-		Music:                             musicHandler,
-		Playlist:                          playlistHandler,
-		BackofficeRoom:                    boRoomHandler,
-		BackofficeMusic:                   bomusicHandler,
-		BackofficeJob:                     boJobHandler,
-		CompanyRate:                       companyRateHandler,
-		CompanyReaction:                   companyReactionHandler,
-		CompanyComment:                    companyCommentHandler,
-		UserReact:                         userReactHandler,
-		UserInfomation:                    userInfomationHandler,
-		SearchUserRate:                    searchUserRateHandler,
-		SearchUserRateComment:             searchUserRateCommentHandler,
-		UserRate:                          userRateHandler,
-		UserRateReaction:                  userRateReactionHandler,
-		UserRateComment:                   userRateCommentHandler,
-		ArticleCommentThreadHandler:       articleCommentThreadHandler,
-		ArticleCommentThreadReplyHandler:  articleCommentThreadReplyHandler,
-		ArticleCommentThreadReaction:      articleCommentThreadReactionHandnler,
-		ArticleCommentThreadReplyReaction: articleCommentThreadReplyReactionHandler,
+		Health:                                healthHandler,
+		Authentication:                        authenticationHandler,
+		SignOut:                               signOutHandler,
+		Password:                              passwordHandler,
+		SignUp:                                signupHandler,
+		User:                                  userHandler,
+		MyProfile:                             myProfileHandler,
+		Skill:                                 skillHandler,
+		Interest:                              interestHandler,
+		LookingFor:                            lookingForHandler,
+		Director:                              directorHandler,
+		Education:                             educationHandler,
+		Companies:                             companiesHandler,
+		Work:                                  workHandler,
+		Cast:                                  castHandler,
+		Country:                               countryHander,
+		Production:                            productionHandler,
+		Location:                              locationHandler,
+		LocationRate:                          locationRateHandler,
+		SearchLocationRate:                    searchLocationRateHandler,
+		MyArticles:                            myarticlesHandler,
+		Article:                               articleHandler,
+		ArticleRate:                           articleRateHandler,
+		ArticleRateSearch:                     articleRateSearchHandler,
+		ArticleRateReaction:                   articleRateReactionHandler,
+		Appreciation:                          appreciationHandler,
+		Follow:                                followHandler,
+		SavedItem:                             savedItemHandler,
+		Comment:                               commentHandler,
+		Reaction:                              reactionHandler,
+		Rate:                                  rateHandler,
+		Response:                              responseHandler,
+		SearchRate:                            searchRateHandler,
+		SearchResponse:                        searchResponseHandler,
+		SearchComment:                         searchCommentHandler,
+		CinemaComment:                         cinemaCommentHandler,
+		CinemaReaction:                        cinemaReactionHandler,
+		CinemaRate:                            cinemaRateHandler,
+		CinemaResponse:                        responseHandler,
+		CinemaSearchRate:                      searchCinemaRateHandler,
+		CinemaSearchResponse:                  searchResponseHandler,
+		CinemaSearchComment:                   searchCinemaCommentHandler,
+		Item:                                  itemHandler,
+		MyItem:                                myItemHandler,
+		Company:                               companyHandler,
+		Film:                                  filmHandler,
+		BackofficeCinema:                      boCinemaHandler,
+		BackofficeFilm:                        boFilmHandler,
+		BackofficeCompany:                     boCompanyHandler,
+		FilmCategory:                          filmCategoryHandler,
+		CompanyCategory:                       companyCategoryHandler,
+		ItemCategory:                          itemCategoryHandler,
+		SavedFilm:                             savedfilmHandler,
+		Savedlocation:                         locationSaveHandler,
+		FollowLocation:                        locationFollowHandler,
+		LocationInfomation:                    locationInfomationHandler,
+		LocationReaction:                      locationReactionHandler,
+		LocationComment:                       locationCommentHandler,
+		SearchLocationComment:                 searchLocationCommentHandler,
+		BackofficeLocation:                    boLocationHandler,
+		ArticleComment:                        articleCommentHandler,
+		SearchArticleComment:                  searchArticleRateCommentHandler,
+		SearchArticleCommentThread:            articleCommentThreadSearchHandler,
+		SearchFilmCommentThread:               filmCommentThreadSearchHandler,
+		Cinema:                                cinemaHandler,
+		SearchCompanyRate:                     searchCompanyRateHandler,
+		SearchCompanyComment:                  searchCompanyCommentHandler,
+		Job:                                   jobHandler,
+		Room:                                  roomHandler,
+		Music:                                 musicHandler,
+		Playlist:                              playlistHandler,
+		BackofficeRoom:                        boRoomHandler,
+		BackofficeMusic:                       bomusicHandler,
+		BackofficeJob:                         boJobHandler,
+		CompanyRate:                           companyRateHandler,
+		CompanyReaction:                       companyReactionHandler,
+		CompanyComment:                        companyCommentHandler,
+		UserReact:                             userReactHandler,
+		UserInfomation:                        userInfomationHandler,
+		SearchUserRate:                        searchUserRateHandler,
+		SearchUserRateComment:                 searchUserRateCommentHandler,
+		UserRate:                              userRateHandler,
+		UserRateReaction:                      userRateReactionHandler,
+		UserRateComment:                       userRateCommentHandler,
+		ArticleCommentThreadHandler:           articleCommentThreadHandler,
+		FilmCommentThreadHandler:              filmCommentThreadHandler,
+		ArticleCommentThreadReplyHandler:      articleCommentThreadReplyHandler,
+		FilmCommentThreadReplyHandler:         filmCommentThreadReplyHandler,
+		ArticleCommentThreadReaction:          articleCommentThreadReactionHandnler,
+		FilmCommentThreadReaction:             filmCommentThreadReactionHandnler,
+		FilmCommentThreadReactionHandnler:     filmCommentThreadReactionHandnler,
+		ArticleCommentThreadReplyReaction:     articleCommentThreadReplyReactionHandler,
+		FilmCommentThreadReplyReactionHandler: filmCommentThreadReplyReactionHandler,
 	}
 	return &app, nil
 }

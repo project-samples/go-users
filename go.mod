@@ -12,8 +12,8 @@ require (
 	github.com/core-go/mongo v0.3.1
 	github.com/core-go/oauth2 v0.1.3 // indirect
 	github.com/core-go/password v0.1.3
-	github.com/core-go/rate v0.0.2
-	github.com/core-go/reaction v0.0.3
+	github.com/core-go/rate v0.0.2 // indirect
+	github.com/core-go/reaction v0.0.3 // indirect
 	github.com/core-go/redis v0.0.1
 	github.com/core-go/search v0.2.8
 	github.com/core-go/security v0.1.0
@@ -38,7 +38,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

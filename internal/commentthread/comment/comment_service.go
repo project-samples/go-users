@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	. "go-service/internal/userinfo"
 	"time"
 )
 
@@ -15,38 +16,10 @@ type CommentService interface {
 	Remove(ctx context.Context, commentId string, commentThreadId string) (int64, error)
 }
 
-func NewCommentService(db *sql.DB,
-	replyTable string,
-	commentIdCol string,
-	authorCol string,
-	idCol string,
-	updatedAtCol string,
-	commentCol string,
-	userIdCol string,
-	timeCol string,
-	parentCol string,
-	historiesCol string,
-	commentThreadIdCol string,
-	reactionCol string,
-	commentReactionTable string,
-	commentIdReactionCol string,
-	userTable string,
-	userIdUserCol string,
-	usernameUserCol string,
-	avatarUserCol string,
-	commentInfoTable string,
-	userfulCountInfoCol string,
-	commentIdInfoCol string,
-	commentThreadInfoTable string,
-	commentIdCommentThreadInfoCol string,
-	replyCountCommentThreadInfoCol string,
-	usefulCountCommentThreadInfoCol string,
-
-	toArray func(interface{}) interface {
-		driver.Valuer
-		sql.Scanner
-	},
-) CommentService {
+func NewCommentService(db *sql.DB, replyTable string, commentIdCol string, authorCol string, idCol string, updatedAtCol string, commentCol string, userIdCol string, timeCol string, parentCol string, historiesCol string, commentThreadIdCol string, reactionCol string, commentReactionTable string, commentIdReactionCol string, userTable string, userIdUserCol string, usernameUserCol string, avatarUserCol string, commentInfoTable string, userfulCountInfoCol string, commentIdInfoCol string, commentThreadInfoTable string, commentIdCommentThreadInfoCol string, replyCountCommentThreadInfoCol string, usefulCountCommentThreadInfoCol string, queryInfo func(ids []string) ([]Info, error), toArray func(interface{}) interface {
+	driver.Valuer
+	sql.Scanner
+}) CommentService {
 	return &commentService{
 		db:                              db,
 		ReplyTable:                      replyTable,
@@ -74,6 +47,7 @@ func NewCommentService(db *sql.DB,
 		commentIdCommentThreadInfoCol:   commentIdCommentThreadInfoCol,
 		replyCountCommentThreadInfoCol:  replyCountCommentThreadInfoCol,
 		usefulCountCommentThreadInfoCol: usefulCountCommentThreadInfoCol,
+		queryInfo:                       queryInfo,
 		toArray:                         toArray,
 	}
 }
@@ -106,7 +80,8 @@ type commentService struct {
 	replyCountCommentThreadInfoCol  string
 	usefulCountCommentThreadInfoCol string
 
-	toArray func(interface{}) interface {
+	queryInfo func(ids []string) ([]Info, error)
+	toArray   func(interface{}) interface {
 		driver.Valuer
 		sql.Scanner
 	}
@@ -251,8 +226,11 @@ func (s *commentService) GetComments(ctx context.Context, commentThreadId string
 	if userId != nil && len(*userId) > 0 {
 		param = "2"
 	}
-	query := fmt.Sprintf(`select a.*, b.%s, b.%s, c.%s%s from %s a left join %s b on a.%s = b.%s left join %s c on a.%s = c.%s %s where a.%s = $%s`,
-		s.usernameUserCol, s.avatarUserCol, s.userfulCountInfoCol, qr, s.ReplyTable, s.userTable, s.authorCol, s.userIdUserCol, s.commentInfoTable, s.commentIdCol, s.commentIdInfoCol, qr2, s.commentThreadIdCol, param)
+	query := fmt.Sprintf(`select a.*,c.%s%s from %s a
+                                  left join %s c on a.%s = c.%s %s 
+                                  where a.%s = $%s`, s.userfulCountInfoCol, qr, s.ReplyTable,
+		s.commentInfoTable, s.commentIdCol, s.commentIdInfoCol, qr2,
+		s.commentThreadIdCol, param)
 	arr = append(arr, commentThreadId)
 	fmt.Println(query)
 	rows, err := s.db.QueryContext(ctx, query, arr...)
@@ -260,55 +238,54 @@ func (s *commentService) GetComments(ctx context.Context, commentThreadId string
 		return nil, err
 	}
 	defer rows.Close()
-	list := []Comment{}
-	if userId != nil && len(*userId) > 0 {
-		for rows.Next() {
-			var comment Comment
-			err := rows.Scan(
-				&comment.CommentId,
-				&comment.Id,
-				&comment.Author,
-				&comment.UserId,
-				&comment.Comment,
-				&comment.Parent,
-				&comment.Time,
-				&comment.UpdatedAt,
-				s.toArray(&comment.Histories),
-				&comment.CommentThreadId,
-				&comment.Username,
-				&comment.Avatar,
-				&comment.UsefulCount,
-				&comment.Disable,
-			)
-			if err != nil {
-				return nil, err
-			}
-
-			list = append(list, comment)
+	comments := []Comment{}
+	for rows.Next() {
+		var comment Comment
+		err := rows.Scan(
+			&comment.CommentId,
+			&comment.CommentThreadId,
+			&comment.Id,
+			&comment.Author,
+			&comment.UserId,
+			&comment.Comment,
+			&comment.Parent,
+			&comment.Time,
+			&comment.UpdatedAt,
+			s.toArray(&comment.Histories),
+			&comment.UsefulCount,
+			&comment.Disable,
+		)
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		for rows.Next() {
-			var comment Comment
-			err := rows.Scan(
-				&comment.CommentId,
-				&comment.Id,
-				&comment.Author,
-				&comment.UserId,
-				&comment.Comment,
-				&comment.Parent,
-				&comment.Time,
-				&comment.UpdatedAt,
-				s.toArray(&comment.Histories),
-				&comment.CommentThreadId,
-				&comment.Username,
-				&comment.Avatar,
-				&comment.UsefulCount,
-			)
-			if err != nil {
-				return nil, err
+
+		comments = append(comments, comment)
+	}
+	if len(comments) == 0 {
+		return comments, nil
+	}
+	ids := make([]string, 0)
+	for _, r := range comments {
+		ids = append(ids, r.Author)
+	}
+	infos, err := s.queryInfo(ids)
+	if err != nil {
+		return nil, err
+	}
+	for k, _ := range comments {
+		c := comments[k]
+		i := BinarySearch(infos, c.Author)
+		if i >= 0 && !c.Anonymous {
+			comments[k].AuthorURL = &infos[i].Url
+			if infos[i].DisplayName != nil {
+				comments[k].AuthorName = infos[i].DisplayName
+			} else {
+				comments[k].AuthorName = &infos[i].Name
 			}
-			list = append(list, comment)
+		} else {
+			comments[k].Author = ""
 		}
 	}
-	return list, nil
+
+	return comments, nil
 }

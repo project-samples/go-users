@@ -169,6 +169,20 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}/{commentId}", app.Comment.Update).Methods(PUT)
 	r.HandleFunc(filmRate+"/{id}/{author}/comments/{commentId}", app.Comment.Delete).Methods(DELETE)
 
+	filmcommentthread := "/films/commentthread"
+	r.HandleFunc(filmcommentthread+"/search", app.SearchFilmCommentThread.Search).Methods(GET)
+	r.HandleFunc(filmcommentthread+"/search", app.SearchFilmCommentThread.Search).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply", app.FilmCommentThreadReplyHandler.GetReplyComments).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{id}/{author}/reply/{commentThreadId}", app.FilmCommentThreadReplyHandler.Reply).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply/{commentId}", app.FilmCommentThreadReplyHandler.Delete).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/{id}/{author}", app.FilmCommentThreadHandler.Comment).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{commentId}", app.FilmCommentThreadHandler.Update).Methods(PUT)
+	r.HandleFunc(filmcommentthread+"/{commentId}", app.FilmCommentThreadHandler.Delete).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReaction.SetUsetful).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReaction.RemoveUseful).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReplyReaction.SetUsetful).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReplyReaction.RemoveUseful).Methods(DELETE)
+
 	// films category
 	filmCategory := "/films/categories"
 	r.HandleFunc(filmCategory+"/search", app.FilmCategory.Search).Methods(GET, POST)

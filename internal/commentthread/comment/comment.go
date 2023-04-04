@@ -13,6 +13,7 @@ type Comment struct {
 	Author          string     `json:"author" gorm:"column:author"`
 	UserId          string     `json:"userId" gorm:"column:userid"`
 	Comment         string     `json:"comment" gorm:"column:comment"`
+	Anonymous       bool       `json:"anonymous" gorm:"column:anonymous"`
 	Parent          *string    `json:"parent" gorm:"column:parent"`
 	Time            time.Time  `json:"time" gorm:"column:time"`
 	CommentThreadId string     `json:"commentThreadId" gorm:"commentthreadid"`
@@ -20,8 +21,8 @@ type Comment struct {
 	Histories       []History  `json:"histories" gorm:"column:histories"`
 	ReplyCount      *int       `json:"replyCount" gorm:"column:replycount"`
 	UsefulCount     *int       `json:"usefulCount" gorm:"column:usefulcount"`
-	Username        *string    `json:"authorName" gorm:"column:username"`
-	Avatar          *string    `json:"userURL" gorm:"column:avatar"`
+	AuthorName      *string    `json:"authorName" gorm:"column:username"`
+	AuthorURL       *string    `json:"authorURL" gorm:"column:imageurl"`
 	Disable         *bool      `json:"disable" gorm:"column:-"`
 }
 
