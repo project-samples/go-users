@@ -337,7 +337,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"userrate", "id", "author", "usefulcount")
 	userRateReactionHandler := reaction.NewReactionHandler(userRateReactionService, 0, 2, 3)
 	// user rate
-	userRateService := rate.NewRateService(db, "userrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
+	userRateService := rate.NewRateService(db, "userrate", "id", "author", "anonymous", "rate", "review", "time", "usefulcount", "replycount",
 		"userrateinfo", "id", "rate", "count", "score", pq.Array)
 
 	userRateHandler := rate.NewRateHandler(userRateService, 0, 1, 5)
@@ -453,7 +453,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	searchLocationRateHandler := search.NewSearchHandler(locationRateSearchBuilder.Search, locationRateType, locationRateFilterType, logError, nil)
 
 	// locationRateService := locationrate.NewLocationRateService(db)
-	locationRateService := rate.NewRateService(db, "locationrate", "id", "author", "rate", "review", "ratetime", "usefulcount", "replycount", "locationinfo", "id", "rate", "count", "score", pq.Array)
+	locationRateService := rate.NewRateService(db, "locationrate", "id", "author", "anonymous", "rate", "review", "ratetime", "usefulcount", "replycount", "locationinfo", "id", "rate", "count", "score", pq.Array)
 	locationRateHandler := rate.NewRateHandler(locationRateService, 0, 1, 5)
 
 	// saved location
@@ -554,7 +554,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	articleCommentHandler := commentmux.NewCommentHandler(articleCommentService, "commentId", "id", "author", "userId")
 
-	articleRateService := rate.NewRateService(db, "articlerate", "id", "author", "rate", "review", "time", "usefulcount",
+	articleRateService := rate.NewRateService(db, "articlerate", "id", "author", "anonymous", "rate", "review", "time", "usefulcount",
 		"replycount", "articleinfo", "id", "rate", "count", "score", pq.Array)
 	articleRateHandler := rate.NewRateHandler(articleRateService, 0, 1, 5)
 
@@ -681,7 +681,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// Film Rate
 	rateService := rate.NewRateService(
 		db,
-		"filmrate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
+		"filmrate", "id", "author", "anonymous", "rate", "review", "time", "usefulcount", "replycount",
 		"filmrateinfo", "id", "rate", "count", "score",
 		pq.Array)
 	rateHandler := rate.NewRateHandler(rateService, 0, 1, 10)
@@ -934,7 +934,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// Cinema Rate
 	cinemaRateService := rate.NewRateService(
 		db,
-		"cinemarate", "id", "author", "rate", "review", "time", "usefulcount", "replycount",
+		"cinemarate", "id", "author", "anonymous", "rate", "review", "time", "usefulcount", "replycount",
 		"cinemarateinfo", "id", "rate", "count", "score",
 		pq.Array)
 	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, 0, 1, 5)
