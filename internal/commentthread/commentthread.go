@@ -18,9 +18,8 @@ type CommentThread struct {
 	Histories   []History  `json:"histories" gorm:"column:histories" bson:"histories" firestore:"histories"`
 	ReplyCount  *int64     `json:"replyCount" gorm:"column:replycount" bson:"replycount" firestore:"replycount"`
 	UsefulCount *int64     `json:"usefulCount" gorm:"column:usefulcount" bson:"usefulcount" firestore:"usefulcount"`
-	AuthorName  *string    `json:"authorName" gorm:"column:username" bson:"username" firestore:"username"`
-	UserURL     *string    `json:"userURL" gorm:"column:imageurl" bson:"imageurl" firestore:"imageurl"`
-	AuthorURL   *string    `json:"authorURL" gorm:"column:imageurl" bson:"imageurl" firestore:"imageurl"`
+	AuthorName  *string    `json:"authorName" gorm:"column:-" bson:"username" firestore:"username"`
+	AuthorURL   *string    `json:"authorURL" gorm:"column:-" bson:"imageurl" firestore:"imageurl"`
 	Disable     *bool      `json:"disable" gorm:"column:disable"`
 }
 

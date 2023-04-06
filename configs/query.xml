@@ -302,39 +302,6 @@
     </if>
   </select>
 
-  <select id="filmratecomment">
-    select * from filmratecomment
-    where
-    <if test="commentId != null">
-      commentId = #{commentId} and
-    </if>
-    <if test="id != null">
-      id = #{id} and
-    </if>
-    <if test="author != null">
-      author = #{author} and
-    </if>
-    <if test="userId != null">
-      userId = #{userId} and
-    </if>
-    <if test="comment != null">
-      comment ilike #{comment} and
-    </if>
-    <if test="time != null">
-      time >= #{time} and
-    </if>
-    <if test="updateAt != null">
-      updateAt >= #{updateAt} and
-    </if>
-    <if test="histories != null">
-      histories in #{histories} and
-    </if>
-    1 = 1
-    <if test="sort != null">
-      order by ${sort}
-    </if>
-  </select>
-
   <select id="company">
       select * from company
       where
@@ -747,9 +714,8 @@
   </select>
 
   <select id="articleratecomment">
-    select r.*, u.imageurl from articleratecomment r
-    join users u on u.id = r.author
-    where 
+    select r.* from articleratecomment r
+    where
     <if test="commentId != null">
       commentId = #{commentId} and
     </if> 
@@ -916,7 +882,7 @@
     </if>
   </select>
   <select id="articlecommentthread">
-    select a.*, b.replycount, b.usefulcount, c.username, c.imageurl
+    select a.*, b.replycount, b.usefulcount
     <if test="userId != null">
       ,
       case
@@ -959,7 +925,7 @@
       </if>
   </select>
   <select id="filmcommentthread">
-    select a.*, b.replycount, b.usefulcount, c.username, c.imageurl
+    select a.*, b.replycount, b.usefulcount
     <if test="userId != null">
       ,
       case
@@ -971,8 +937,6 @@
     from filmcommentthread a
     left join filmcommentthreadinfo b
     on a.commentId = b.commentid
-    left join users c
-    on c.id = a.author
     <if test = "userId != null">
     left join filmcommentthreadreaction d
     on a.commentId = d.commentId and a.userId = #{userId}

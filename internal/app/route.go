@@ -159,9 +159,9 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(myitem+"/{id}", app.MyItem.Delete).Methods(DELETE)
 
 	filmRate := "/films/rates"
-	r.HandleFunc(filmRate+"/search", app.SearchRate.Search).Methods(GET, POST)
+	r.HandleFunc(filmRate+"/search", app.FilmSearchRate.Search).Methods(GET, POST)
 	r.HandleFunc(filmRate+"/comments/search", app.SearchComment.Search).Methods(GET, POST)
-	r.HandleFunc(filmRate+"/{id}/{author}", app.Rate.Rate).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}", app.FilmRate.Rate).Methods(POST)
 	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", app.Reaction.Create).Methods(POST)
 	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", app.Reaction.Delete).Methods(DELETE)
 	r.HandleFunc(filmRate+"/{id}/{author}/comments", app.Comment.Load).Methods(GET)

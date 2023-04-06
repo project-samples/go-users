@@ -1,43 +1,42 @@
-package ratereactionsearch
+package search
 
 import (
 	"context"
 	"encoding/json"
-	"go-service/internal/commentthread"
 	"net/http"
 )
 
-func NewSearchCommentThreadHandler(
-	service CommentSearchService,
-) *CommentThreadSearchHandler {
-	return &CommentThreadSearchHandler{
+func NewSearchRateHandler(
+	service RateCommentSearchService,
+) *RateSearchHandler {
+	return &RateSearchHandler{
 		service: service,
 	}
 }
 
 type SearchResult struct {
-	List  []commentthread.CommentThread `json:"list"`
-	Total int64                         `json:"total"`
+	List  []Rate `json:"list"`
+	Total int64  `json:"total"`
 }
-type CommentThreadSearchHandler struct {
-	service CommentSearchService
+type RateSearchHandler struct {
+	service RateCommentSearchService
 }
 
-func (h *CommentThreadSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
-	var filter commentthread.CommentThreadFilter
+func (h *RateSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
+	var filter RateFilter
 	er1 := Decode(w, r, &filter)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	result1, total, er2 := h.service.Search(r.Context(), &filter)
-	if er2 != nil {
-		http.Error(w, er2.Error(), http.StatusInternalServerError)
+	list, total, err := h.service.Search(r.Context(), &filter)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	result := SearchResult{
-		List:  result1,
+		List:  list,
 		Total: total,
 	}
 	w.Header().Set("Content-Type", "application/json")
