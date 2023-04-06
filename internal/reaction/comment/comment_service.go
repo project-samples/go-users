@@ -143,11 +143,14 @@ func (s *commentService) Create(ctx context.Context, comment *Comment) (int64, e
 
 func (s *commentService) Update(ctx context.Context, comment *Comment) (int64, error) {
 	var oldComment Comment
-	query1 := fmt.Sprintf("select %s, %s, %s, %s, histories from %s where %s = $1 limit 1", s.TimeCol, s.UpdatedAtCol, s.CommentCol, s.AnonymousCol, s.CommentTable, s.CommentIdCol)
+	query1 := fmt.Sprintf("select %s, %s, %s, histories from %s where %s = $1 limit 1", s.TimeCol, s.UpdatedAtCol, s.CommentCol, s.CommentTable, s.CommentIdCol)
 	fmt.Println(query1)
 	rows, _ := s.DB.QueryContext(ctx, query1, comment.CommentId)
 	for rows.Next() {
-		rows.Scan(&oldComment.Time, &oldComment.UpdatedAt, &oldComment.Comment, s.ToArray(&oldComment.Histories))
+		err := rows.Scan(&oldComment.Time, &oldComment.UpdatedAt, &oldComment.Comment, s.ToArray(&oldComment.Histories))
+		if err != nil {
+			return 0, err
+		}
 	}
 	rows.Close()
 
