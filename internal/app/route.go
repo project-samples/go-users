@@ -170,8 +170,7 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(filmRate+"/{id}/{author}/comments/{commentId}", app.Comment.Delete).Methods(DELETE)
 
 	filmcommentthread := "/films/commentthread"
-	r.HandleFunc(filmcommentthread+"/search", app.SearchFilmCommentThread.Search).Methods(GET)
-	r.HandleFunc(filmcommentthread+"/search", app.SearchFilmCommentThread.Search).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/search", app.SearchFilmCommentThread.Search).Methods(GET, POST)
 	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply", app.FilmCommentThreadReply.GetReplyComments).Methods(POST)
 	r.HandleFunc(filmcommentthread+"/{id}/{author}/reply/{commentThreadId}", app.FilmCommentThreadReply.Reply).Methods(POST)
 	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply/{commentId}", app.FilmCommentThreadReply.Delete).Methods(DELETE)

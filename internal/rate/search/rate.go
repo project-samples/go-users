@@ -17,7 +17,9 @@ type Rate struct {
 	ReplyCount  int         `json:"replyCount" gorm:"column:replyCount" bson:"replyCount,omitempty" dynamodbav:"replyCount,omitempty" firestore:"replyCount,omitempty"`
 	Histories   []Histories `json:"histories" gorm:"column:histories" bson:"histories,omitempty" dynamodbav:"histories,omitempty" firestore:"histories,omitempty"`
 	Disable     *bool       `json:"disable" gorm:"column:disable"`
-	UserURL     *string     `json:"authorURL" gorm:"column:imageurl"`
+	Anonymous   bool        `json:"anonymous,omitempty" gorm:"column:anonymous" bson:"anonymous,omitempty" dynamodbav:"anonymous,omitempty" firestore:"anonymous,omitempty"`
+	AuthorURL   *string     `json:"authorURL,omitempty" gorm:"column:imageurl"`
+	AuthorName  *string     `json:"authorName,omitempty" gorm:"column:username"`
 }
 
 type Rates struct {

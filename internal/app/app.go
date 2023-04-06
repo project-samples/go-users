@@ -82,6 +82,7 @@ import (
 	bomusic "go-service/internal/backoffice/music"
 	boroom "go-service/internal/backoffice/room"
 	"go-service/internal/category"
+	commentreactionsearch "go-service/internal/commentreactionsearch"
 	"go-service/internal/company"
 	"go-service/internal/film"
 	"go-service/internal/item"
@@ -93,6 +94,8 @@ import (
 	"go-service/internal/myitem"
 	"go-service/internal/myprofile"
 	"go-service/internal/playlist"
+	"go-service/internal/ratereactionsearch"
+	ratereaction "go-service/internal/ratereactionsearch"
 	"go-service/internal/room"
 	saveditem "go-service/internal/save"
 	"go-service/internal/user"
@@ -134,7 +137,7 @@ type ApplicationContext struct {
 	Reaction              reaction.ReactionHandler
 	Rate                  rate.RateHandler
 	Response              response.ResponseHandler
-	SearchRate            *search.SearchHandler
+	SearchRate            *ratereactionsearch.RateSearchHandler
 	SearchResponse        *search.SearchHandler
 	SearchComment         *search.SearchHandler
 	CinemaComment         commentmux.CommentHandler
@@ -170,7 +173,7 @@ type ApplicationContext struct {
 	FilmCommentThreadReply            muxcomment.CommentHandler
 	SearchArticleComment              *search.SearchHandler
 	SearchArticleCommentThread        *search.SearchHandler
-	SearchFilmCommentThread           *search.SearchHandler
+	SearchFilmCommentThread           *commentreactionsearch.CommentThreadSearchHandler
 	Cinema                            cinema.CinemaHandler
 	SearchCompanyRate                 *search.SearchHandler
 	SearchCompanyComment              *search.SearchHandler
@@ -586,12 +589,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	filmCommentthreadBuilder, err := s.NewSearchBuilderWithArray(db, commentThreadType, filmCommentThreadQuery, pq.Array)
+
+	filmCommentSearchBuilder, err := commentreactionsearch.NewCommentSearchService(db, filmCommentThreadQuery, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-	filmCommentThreadSearchHandler := search.NewSearchHandler(filmCommentthreadBuilder.Search, commentThreadType, reflect.TypeOf(commentthread.CommentThreadFilter{}), logError, nil)
-	//loadUserInfo := rateuser.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	filmCommentThreadSearchHandler := commentreactionsearch.NewSearchCommentThreadHandler(filmCommentSearchBuilder)
 
 	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmcomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
 	filmCommentThreadReplyHandler := muxcomment.NewCommentHandler(filmCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
@@ -661,14 +664,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// SearchComment
 	commentType := reflect.TypeOf(searchcomment.Comment{})
-	queryComment, _ := template.UseQueryWithArray(conf.Template, nil, "filmratecomment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
-
+	queryComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &commentType, convert.ToMap, buildParam, pq.Array)
 	commentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryComment, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	filmRateCommentService := film.NewFilmSearchService(commentSearchBuilder.Search, loadUserInfo.Load)
-	searchCommentHandler := search.NewSearchHandler(filmRateCommentService.Search, commentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
+	searchCommentHandler := search.NewSearchHandler(commentSearchBuilder.Search, commentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
 
 	// Film Reaction
 	reactionService := reaction.NewReactionService(
@@ -687,13 +688,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	//Film Search Rate
 	rateType := reflect.TypeOf(searchrate.Rate{})
-	rateFilterType := reflect.TypeOf(searchrate.RateFilter{})
 	queryRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
-	rateSearchBuilder, err := s.NewSearchBuilderWithArray(db, rateType, queryRate, pq.Array)
+	rateSearchBuilder, err := ratereaction.NewRateSearchService(db, queryRate, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-	searchRateHandler := search.NewSearchHandler(rateSearchBuilder.Search, rateType, rateFilterType, log.LogError, nil)
+	searchRateHandler := ratereaction.NewSearchRateHandler(rateSearchBuilder)
 
 	// Item
 	itemType := reflect.TypeOf(item.Item{})
@@ -1053,7 +1053,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	searchCompanyRateHandler := search.NewSearchHandler(companyRateSearchBuilder.Search, companyRateType, companyRateFilterType, logError, nil)
-	// SearchComment Company
+	// SearchRate Company
 	companyCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCompanyComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &companyCommentType, convert.ToMap, buildParam, pq.Array)
 	companyCommentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryCompanyComment, pq.Array)
