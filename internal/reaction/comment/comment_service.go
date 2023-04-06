@@ -109,8 +109,6 @@ func (s *commentService) Load(ctx context.Context, id string, author string) ([]
 			} else {
 				comments[k].AuthorName = &infos[i].Name
 			}
-		} else {
-			comments[k].Author = ""
 		}
 	}
 	return comments, nil

@@ -282,8 +282,6 @@ func (s *commentService) GetComments(ctx context.Context, commentThreadId string
 			} else {
 				comments[k].AuthorName = &infos[i].Name
 			}
-		} else {
-			comments[k].Author = ""
 		}
 	}
 
