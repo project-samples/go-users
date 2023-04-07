@@ -88,15 +88,12 @@ type commentService struct {
 }
 
 func (s *commentService) Update(ctx context.Context, comment Comment) (int64, error) {
-	qr := fmt.Sprintf("Select %s,%s from %s where %s = $1", s.commentCol, s.historiesCol, s.ReplyTable, s.commentIdCol)
+	qr := fmt.Sprintf("select %s, %s,%s from %s where %s = $1", s.commentIdCol, s.commentCol, s.historiesCol, s.ReplyTable, s.commentIdCol)
 	rows := s.db.QueryRow(qr, comment.CommentId)
-	var exist *Comment
-	err := rows.Scan(&comment.Comment, &comment.Histories)
+	var exist = Comment{}
+	err := rows.Scan(&exist.CommentId, &exist.Comment, s.toArray(&exist.Histories))
 	if err != nil {
 		return -1, err
-	}
-	if exist == nil {
-		return -1, fmt.Errorf("comment with id %s was not existed", comment.Id)
 	}
 	updatedTime := time.Now()
 	exist.Histories = append(exist.Histories, History{
@@ -104,7 +101,7 @@ func (s *commentService) Update(ctx context.Context, comment Comment) (int64, er
 		Time:    updatedTime,
 	})
 	qr1 := fmt.Sprintf("update %s set %s = $1, %s = $2, %s = $3", s.ReplyTable, s.commentCol, s.historiesCol, s.updatedAtCol)
-	rows2, er2 := s.db.ExecContext(ctx, qr1, comment.Comment, exist.Histories, updatedTime)
+	rows2, er2 := s.db.ExecContext(ctx, qr1, comment.Comment, s.toArray(exist.Histories), updatedTime)
 	if er2 != nil {
 		return -1, er2
 	}

@@ -595,7 +595,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	filmCommentThreadSearchHandler := searchcommentthread.NewSearchCommentThreadHandler(filmCommentSearchBuilder)
 
-	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmcomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
+	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmcomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
 	filmCommentThreadReplyHandler := muxcomment.NewCommentHandler(filmCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	filmCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "filmcommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
 		"filmcomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
@@ -609,7 +609,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// ------------- FILM-------------
 
-	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updated", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
+	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
 	articleCommentThreadReplyHandler := muxcomment.NewCommentHandler(articleCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
 		"articlecomment", "commentid", "commentthreadid", "articlecommentthreadinfo", "commentid",

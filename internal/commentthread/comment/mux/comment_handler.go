@@ -95,6 +95,30 @@ func (h *CommentHandler) Reply(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(obj.CommentId)
 }
+
+func (h *CommentHandler) UpdateReply(w http.ResponseWriter, r *http.Request) {
+	var obj sv.Comment
+	commentId := mux.Vars(r)[h.commentIdField]
+	err := Decode(w, r, &obj)
+	if err != nil {
+		return
+	}
+	obj.CommentId = commentId
+	res, err := h.service.Update(r.Context(), obj)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if res <= 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode("")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(obj.CommentId)
+}
 func (h *CommentHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	commentId := mux.Vars(r)[h.commentIdField]
 	commentThreadId := mux.Vars(r)[h.commentThreadIdField]
