@@ -8,7 +8,13 @@ import (
 	"github.com/lib/pq"
 	"reflect"
 	"sort"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
+	_ "unicode/utf8"
 )
+
+var collator = collate.New(language.Und)
 
 type InfoQuery struct {
 	db          *sql.DB
@@ -101,8 +107,5 @@ func distinct(arr []string) []string {
 }
 
 func compare(a, b string) int {
-	if a == b {
-		return 0
-	}
-	return -1
+	return collator.CompareString(a, b)
 }
