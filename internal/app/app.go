@@ -16,6 +16,7 @@ import (
 	authhandler "github.com/core-go/auth/handler"
 	sqlauth "github.com/core-go/auth/sql"
 	sv "github.com/core-go/core"
+	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/shortid"
 	v "github.com/core-go/core/v10"
 	. "github.com/core-go/health"
@@ -103,46 +104,50 @@ import (
 )
 
 type ApplicationContext struct {
-	Health                *Handler
-	Authentication        *authhandler.AuthenticationHandler
-	SignOut               *authhandler.SignOutHandler
-	Password              *PasswordHandler
-	SignUp                *SignUpHandler
-	User                  user.UserHandler
-	MyProfile             myprofile.MyProfileHandler
-	Skill                 *q.QueryHandler
-	Interest              *q.QueryHandler
-	LookingFor            *q.QueryHandler
-	Director              *q.QueryHandler
-	Education             *q.QueryHandler
-	Companies             *q.QueryHandler
-	Work                  *q.QueryHandler
-	Cast                  *q.QueryHandler
-	Country               *q.QueryHandler
-	Production            *q.QueryHandler
-	Location              location.LocationHandler
-	LocationRate          rate.RateHandler
-	SearchLocationRate    *search.SearchHandler
-	MyArticles            myarticles.ArticleHandler
-	Article               article.ArticleHandler
-	ArticleRate           rate.RateHandler
-	ArticleRateSearch     *search.SearchHandler
-	ArticleRateReaction   reaction.ReactionHandler
-	Appreciation          appreciation.AppreciationHandler
-	Follow                follow.FollowHandler
-	SavedItem             saveditem.SaveHandler
-	Comment               commentmux.CommentHandler
-	Reaction              reaction.ReactionHandler
-	Response              response.ResponseHandler
-	SearchResponse        *search.SearchHandler
-	SearchComment         *search.SearchHandler
-	CinemaComment         commentmux.CommentHandler
-	CinemaReaction        reaction.ReactionHandler
-	CinemaRate            rate.RateHandler
-	CinemaResponse        response.ResponseHandler
-	CinemaSearchRate      *search.SearchHandler
-	CinemaSearchResponse  *search.SearchHandler
-	CinemaSearchComment   *search.SearchHandler
+	Health              *Handler
+	AuthTokenCheck      *authorization.Handler
+	Authentication      *authhandler.AuthenticationHandler
+	SignOut             *authhandler.SignOutHandler
+	Password            *PasswordHandler
+	SignUp              *SignUpHandler
+	User                user.UserHandler
+	MyProfile           myprofile.MyProfileHandler
+	Skill               *q.QueryHandler
+	Interest            *q.QueryHandler
+	LookingFor          *q.QueryHandler
+	Director            *q.QueryHandler
+	Education           *q.QueryHandler
+	Companies           *q.QueryHandler
+	Work                *q.QueryHandler
+	Cast                *q.QueryHandler
+	Country             *q.QueryHandler
+	Production          *q.QueryHandler
+	Location            location.LocationHandler
+	LocationRate        rate.RateHandler
+	SearchLocationRate  *search.SearchHandler
+	MyArticles          myarticles.ArticleHandler
+	Article             article.ArticleHandler
+	ArticleRate         rate.RateHandler
+	ArticleRateSearch   *search.SearchHandler
+	ArticleRateReaction reaction.ReactionHandler
+	Appreciation        appreciation.AppreciationHandler
+	Follow              follow.FollowHandler
+	SavedItem           saveditem.SaveHandler
+	Comment             commentmux.CommentHandler
+	Reaction            reaction.ReactionHandler
+	Response            response.ResponseHandler
+	SearchResponse      *search.SearchHandler
+	SearchComment       *search.SearchHandler
+
+	CinemaComment        commentmux.CommentHandler
+	CinemaReaction       reaction.ReactionHandler
+	CinemaRate           rate.RateHandler
+	CinemaResponse       response.ResponseHandler
+	CinemaSearchRate     *searchrate.RateSearchHandler
+	CinemaSearchResponse *search.SearchHandler
+	CinemaSearchComment  *searchcommentthread.CommentThreadSearchHandler
+	Cinema               cinema.CinemaHandler
+
 	Item                  item.ItemHandler
 	MyItem                myitem.MyItemHandler
 	Company               company.CompanyHandler
@@ -165,35 +170,38 @@ type ApplicationContext struct {
 	ArticleComment                    commentmux.CommentHandler
 	ArticleCommentThread              muxcommentthread.CommentThreadHandler
 	ArticleCommentThreadReply         muxcomment.CommentHandler
-	FilmCommentThreadReply            muxcomment.CommentHandler
-	SearchArticleComment              *search.SearchHandler
-	SearchArticleCommentThread        *searchcommentthread.CommentThreadSearchHandler
-	Cinema                            cinema.CinemaHandler
-	SearchCompanyRate                 *search.SearchHandler
-	SearchCompanyComment              *search.SearchHandler
-	Job                               job.JobHandler
-	Room                              room.RoomHandler
-	Music                             music.MusicHandler
-	Playlist                          playlist.PlaylistHandler
-	BackofficeRoom                    boroom.BackofficeRoomHandler
-	BackofficeMusic                   bomusic.BackofficeMusicHandler
-	BackofficeJob                     bojob.BackofficeJobHandler
-	CompanyRate                       rates.RatesHandler
-	CompanyReaction                   reaction.ReactionHandler
-	CompanyComment                    commentmux.CommentHandler
-	UserReact                         userreaction.UserReactionHandler
-	UserInfomation                    userinfomation.UserInfomationHandler
-	SearchUserRate                    *search.SearchHandler
-	SearchUserRateComment             *search.SearchHandler
-	UserRate                          rate.RateHandler
-	UserRateReaction                  reaction.ReactionHandler
-	UserRateComment                   commentmux.CommentHandler
 	ArticleCommentThreadReaction      commentthreadreaction.CommentReactionHandler
 	ArticleCommentThreadReplyReaction commentthreadreaction.CommentReactionHandler
 
+	SearchArticleComment       *searchrate.RateSearchHandler
+	SearchArticleCommentThread *searchcommentthread.CommentThreadSearchHandler
+
+	Job             job.JobHandler
+	Room            room.RoomHandler
+	Music           music.MusicHandler
+	Playlist        playlist.PlaylistHandler
+	BackofficeRoom  boroom.BackofficeRoomHandler
+	BackofficeMusic bomusic.BackofficeMusicHandler
+	BackofficeJob   bojob.BackofficeJobHandler
+
+	SearchCompanyRate    *searchrate.RateSearchHandler
+	SearchCompanyComment *searchcommentthread.CommentThreadSearchHandler
+	CompanyRate          rates.RatesHandler
+	CompanyReaction      reaction.ReactionHandler
+	CompanyComment       commentmux.CommentHandler
+
+	UserReact             userreaction.UserReactionHandler
+	UserInfomation        userinfomation.UserInfomationHandler
+	SearchUserRate        *search.SearchHandler
+	SearchUserRateComment *search.SearchHandler
+	UserRate              rate.RateHandler
+	UserRateReaction      reaction.ReactionHandler
+	UserRateComment       commentmux.CommentHandler
+
 	FilmSearchRate                 *searchrate.RateSearchHandler
-	FilmRate                       rate.RateHandler
 	FilmCommentThread              muxcommentthread.CommentThreadHandler
+	FilmRate                       rate.RateHandler
+	FilmCommentThreadReply         muxcomment.CommentHandler
 	SearchFilmCommentThread        *searchcommentthread.CommentThreadSearchHandler
 	FilmCommentThreadReaction      commentthreadreaction.CommentReactionHandler
 	FilmCommentThreadReplyReaction commentthreadreaction.CommentReactionHandler
@@ -259,6 +267,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	authenticator := NewAuthenticator(authStatus, userInfoService, bcryptComparator, tokenService.GenerateToken, conf.Authorize.Token, conf.Authorize.Payload)
 	authenticationHandler := authhandler.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError)
 	signOutHandler := authhandler.NewSignOutHandler(tokenService.VerifyToken, conf.Authorize.Token.Secret, tokenBlacklistChecker.Revoke, log.ErrorMsg)
+	authorizationCheckerHandler := authorization.NewHandler(tokenService.GetAndVerifyToken, conf.Authorize.Token.Secret)
 
 	passwordResetCode := "passwordcodes"
 	//passwordRepository := pm.NewPasswordRepositoryByConfig(mongoDb, userCollection, authentication, userCollection, "userId", conf.Password.Schema)
@@ -543,11 +552,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchArticleCommentBuilder, err := s.NewSearchBuilderWithArray(db, searchArticleCommentType, searchArticleCommentQuery, pq.Array)
+
+	searchArticleCommentBuilder, err := searchrate.NewRateSearchService(db, searchArticleCommentQuery, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-	searchArticleRateCommentHandler := search.NewSearchHandler(searchArticleCommentBuilder.Search, reflect.TypeOf(searchcomment.Comment{}), reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
+	searchArticleRateCommentHandler := searchrate.NewSearchRateHandler(searchArticleCommentBuilder)
 
 	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	articleCommentHandler := commentmux.NewCommentHandler(articleCommentService, "commentId", "id", "author", "userId")
@@ -918,11 +928,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// SearchCommentCinema
 	cinemaCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCinemaComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &cinemaCommentType, convert.ToMap, buildParam, pq.Array)
-	cinemaCommentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryCinemaComment, pq.Array)
+	cinemaCommentSearchBuilder, err := searchcommentthread.NewCommentThreadSearchService(db, queryCinemaComment, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-	searchCinemaCommentHandler := search.NewSearchHandler(cinemaCommentSearchBuilder.Search, cinemaCommentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
+	searchCinemaCommentHandler := searchcommentthread.NewSearchCommentThreadHandler(cinemaCommentSearchBuilder)
 	// Cinema Reaction
 	cinemaReactionService := reaction.NewReactionService(
 		db,
@@ -939,14 +949,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, 0, 1, 5)
 
 	//Cinema Search Rate
-	cinemaRateType := reflect.TypeOf(searchrate.Rate{})
-	cinemaRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
 	queryCinemaRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
-	cinemaRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, cinemaRateType, queryCinemaRate, pq.Array)
+	cinemaRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCinemaRate, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-	searchCinemaRateHandler := search.NewSearchHandler(cinemaRateSearchBuilder.Search, cinemaRateType, cinemaRateFilterType, log.LogError, nil)
+	searchCinemaRateHandler := searchrate.NewSearchRateHandler(cinemaRateSearchBuilder)
 	/////////////
 	// Backoffice - Film
 	bofilmType := reflect.TypeOf(bofilm.Film{})
@@ -1042,25 +1050,23 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	companyCommentHandler := commentmux.NewCommentHandler(companyCommentService, "commentId", "id", "author", "userId")
 	// company search rate
 	companyRateType := reflect.TypeOf(searchrate.Rates{})
-	companyRateFilterType := reflect.TypeOf(searchrate.RatesFilter{})
 	queryCompanyRate, err := template.UseQueryWithArray(conf.Template, nil, "companyrate", templates, &companyRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	companyRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, companyRateType, queryCompanyRate, pq.Array)
+	companyRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCompanyRate, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-	searchCompanyRateHandler := search.NewSearchHandler(companyRateSearchBuilder.Search, companyRateType, companyRateFilterType, logError, nil)
+	searchCompanyRateHandler := searchrate.NewSearchRateHandler(companyRateSearchBuilder)
 	// SearchResult Company
 	companyCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCompanyComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &companyCommentType, convert.ToMap, buildParam, pq.Array)
-	companyCommentSearchBuilder, err := s.NewSearchBuilderWithArray(db, commentType, queryCompanyComment, pq.Array)
+	companyCommentSearchBuilder, err := searchcommentthread.NewCommentThreadSearchService(db, queryCompanyComment, pq.Array, loadUserInfo.Load)
 	if err != nil {
 		return nil, err
 	}
-
-	searchCompanyCommentHandler := search.NewSearchHandler(companyCommentSearchBuilder.Search, companyCommentType, reflect.TypeOf(searchcomment.CommentFilter{}), logError, nil)
+	searchCompanyCommentHandler := searchcommentthread.NewSearchCommentThreadHandler(companyCommentSearchBuilder)
 
 	// Comment Company
 	// companyCommentService := comment.NewCommentService(db, "",)
@@ -1150,64 +1156,67 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	bomusicHandler := bomusic.NewBackofficeMusicHandler(bomusicSearchBuilder.Search, bomusicService, log.LogError, nil, validator.Validate, modelStatus, action)
 
 	app := ApplicationContext{
-		Health:                     healthHandler,
-		Authentication:             authenticationHandler,
-		SignOut:                    signOutHandler,
-		Password:                   passwordHandler,
-		SignUp:                     signupHandler,
-		User:                       userHandler,
-		MyProfile:                  myProfileHandler,
-		Skill:                      skillHandler,
-		Interest:                   interestHandler,
-		LookingFor:                 lookingForHandler,
-		Director:                   directorHandler,
-		Education:                  educationHandler,
-		Companies:                  companiesHandler,
-		Work:                       workHandler,
-		Cast:                       castHandler,
-		Country:                    countryHander,
-		Production:                 productionHandler,
-		Location:                   locationHandler,
-		LocationRate:               locationRateHandler,
-		SearchLocationRate:         searchLocationRateHandler,
-		MyArticles:                 myarticlesHandler,
-		Article:                    articleHandler,
-		ArticleRate:                articleRateHandler,
-		ArticleRateSearch:          articleRateSearchHandler,
-		ArticleRateReaction:        articleRateReactionHandler,
-		Appreciation:               appreciationHandler,
-		Follow:                     followHandler,
-		SavedItem:                  savedItemHandler,
-		Comment:                    commentHandler,
-		Reaction:                   reactionHandler,
-		FilmRate:                   rateHandler,
-		Response:                   responseHandler,
-		FilmSearchRate:             searchRateHandler,
-		SearchResponse:             searchResponseHandler,
-		SearchComment:              searchCommentHandler,
-		CinemaComment:              cinemaCommentHandler,
-		CinemaReaction:             cinemaReactionHandler,
-		CinemaRate:                 cinemaRateHandler,
-		CinemaResponse:             responseHandler,
-		CinemaSearchRate:           searchCinemaRateHandler,
-		CinemaSearchResponse:       searchResponseHandler,
-		CinemaSearchComment:        searchCinemaCommentHandler,
-		Item:                       itemHandler,
-		MyItem:                     myItemHandler,
-		Company:                    companyHandler,
-		Film:                       filmHandler,
-		BackofficeCinema:           boCinemaHandler,
-		BackofficeFilm:             boFilmHandler,
-		BackofficeCompany:          boCompanyHandler,
-		FilmCategory:               filmCategoryHandler,
-		CompanyCategory:            companyCategoryHandler,
-		ItemCategory:               itemCategoryHandler,
-		SavedFilm:                  savedfilmHandler,
-		Savedlocation:              locationSaveHandler,
-		FollowLocation:             locationFollowHandler,
-		LocationInfomation:         locationInfomationHandler,
-		LocationReaction:           locationReactionHandler,
-		LocationComment:            locationCommentHandler,
+		Health:               healthHandler,
+		Authentication:       authenticationHandler,
+		AuthTokenCheck:       authorizationCheckerHandler,
+		SignOut:              signOutHandler,
+		Password:             passwordHandler,
+		SignUp:               signupHandler,
+		User:                 userHandler,
+		MyProfile:            myProfileHandler,
+		Skill:                skillHandler,
+		Interest:             interestHandler,
+		LookingFor:           lookingForHandler,
+		Director:             directorHandler,
+		Education:            educationHandler,
+		Companies:            companiesHandler,
+		Work:                 workHandler,
+		Cast:                 castHandler,
+		Country:              countryHander,
+		Production:           productionHandler,
+		Location:             locationHandler,
+		LocationRate:         locationRateHandler,
+		SearchLocationRate:   searchLocationRateHandler,
+		MyArticles:           myarticlesHandler,
+		Article:              articleHandler,
+		ArticleRate:          articleRateHandler,
+		ArticleRateSearch:    articleRateSearchHandler,
+		ArticleRateReaction:  articleRateReactionHandler,
+		Appreciation:         appreciationHandler,
+		Follow:               followHandler,
+		SavedItem:            savedItemHandler,
+		Comment:              commentHandler,
+		Reaction:             reactionHandler,
+		FilmRate:             rateHandler,
+		Response:             responseHandler,
+		FilmSearchRate:       searchRateHandler,
+		SearchResponse:       searchResponseHandler,
+		SearchComment:        searchCommentHandler,
+		CinemaComment:        cinemaCommentHandler,
+		CinemaReaction:       cinemaReactionHandler,
+		CinemaRate:           cinemaRateHandler,
+		CinemaResponse:       responseHandler,
+		CinemaSearchRate:     searchCinemaRateHandler,
+		CinemaSearchResponse: searchResponseHandler,
+		CinemaSearchComment:  searchCinemaCommentHandler,
+		Item:                 itemHandler,
+		MyItem:               myItemHandler,
+		Company:              companyHandler,
+		Film:                 filmHandler,
+		BackofficeCinema:     boCinemaHandler,
+		BackofficeFilm:       boFilmHandler,
+		BackofficeCompany:    boCompanyHandler,
+		FilmCategory:         filmCategoryHandler,
+		CompanyCategory:      companyCategoryHandler,
+		ItemCategory:         itemCategoryHandler,
+		SavedFilm:            savedfilmHandler,
+		Savedlocation:        locationSaveHandler,
+		FollowLocation:       locationFollowHandler,
+
+		LocationInfomation: locationInfomationHandler,
+		LocationReaction:   locationReactionHandler,
+		LocationComment:    locationCommentHandler,
+
 		SearchLocationComment:      searchLocationCommentHandler,
 		BackofficeLocation:         boLocationHandler,
 		ArticleComment:             articleCommentHandler,
@@ -1215,25 +1224,28 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		SearchArticleCommentThread: articleCommentThreadSearchHandler,
 		SearchFilmCommentThread:    filmCommentThreadSearchHandler,
 		Cinema:                     cinemaHandler,
-		SearchCompanyRate:          searchCompanyRateHandler,
-		SearchCompanyComment:       searchCompanyCommentHandler,
-		Job:                        jobHandler,
-		Room:                       roomHandler,
-		Music:                      musicHandler,
-		Playlist:                   playlistHandler,
-		BackofficeRoom:             boRoomHandler,
-		BackofficeMusic:            bomusicHandler,
-		BackofficeJob:              boJobHandler,
-		CompanyRate:                companyRateHandler,
-		CompanyReaction:            companyReactionHandler,
-		CompanyComment:             companyCommentHandler,
-		UserReact:                  userReactHandler,
-		UserInfomation:             userInfomationHandler,
-		SearchUserRate:             searchUserRateHandler,
-		SearchUserRateComment:      searchUserRateCommentHandler,
-		UserRate:                   userRateHandler,
-		UserRateReaction:           userRateReactionHandler,
-		UserRateComment:            userRateCommentHandler,
+
+		Job:             jobHandler,
+		Room:            roomHandler,
+		Music:           musicHandler,
+		Playlist:        playlistHandler,
+		BackofficeRoom:  boRoomHandler,
+		BackofficeMusic: bomusicHandler,
+		BackofficeJob:   boJobHandler,
+
+		SearchCompanyRate:    searchCompanyRateHandler,
+		SearchCompanyComment: searchCompanyCommentHandler,
+		CompanyRate:          companyRateHandler,
+		CompanyReaction:      companyReactionHandler,
+		CompanyComment:       companyCommentHandler,
+
+		UserReact:             userReactHandler,
+		UserInfomation:        userInfomationHandler,
+		SearchUserRate:        searchUserRateHandler,
+		SearchUserRateComment: searchUserRateCommentHandler,
+		UserRate:              userRateHandler,
+		UserRateReaction:      userRateReactionHandler,
+		UserRateComment:       userRateCommentHandler,
 
 		ArticleCommentThread:              articleCommentThreadHandler,
 		ArticleCommentThreadReply:         articleCommentThreadReplyHandler,

@@ -12,7 +12,9 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	if err != nil {
 		return err
 	}
+
 	r.HandleFunc("/health", app.Health.Check).Methods(GET)
+	r.Use(app.AuthTokenCheck.HandleAuthorization)
 
 	r.HandleFunc("/authenticate", app.Authentication.Authenticate).Methods(POST)
 	r.HandleFunc("/authentication/signout/{username}", app.SignOut.SignOut).Methods(GET)
@@ -121,6 +123,7 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(articlecommentthread+"/search", app.SearchArticleCommentThread.Search).Methods(POST)
 	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply", app.ArticleCommentThreadReply.GetReplyComments).Methods(POST)
 	r.HandleFunc(articlecommentthread+"/{id}/{author}/reply/{commentThreadId}", app.ArticleCommentThreadReply.Reply).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/reply/{commentId}", app.ArticleCommentThreadReply.UpdateReply).Methods(PUT)
 	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply/{commentId}", app.ArticleCommentThreadReply.Delete).Methods(DELETE)
 	r.HandleFunc(articlecommentthread+"/{id}/{author}", app.ArticleCommentThread.Comment).Methods(POST)
 	r.HandleFunc(articlecommentthread+"/{commentId}", app.ArticleCommentThread.Update).Methods(PUT)
