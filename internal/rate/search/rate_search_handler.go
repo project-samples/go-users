@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"encoding/json"
+	"github.com/core-go/search"
 	"net/http"
 )
 
@@ -30,6 +31,9 @@ func (h *RateSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if filter.Filter != nil {
+		search.RepairFilter(filter.Filter)
+	}
 	list, total, err := h.service.Search(r.Context(), &filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

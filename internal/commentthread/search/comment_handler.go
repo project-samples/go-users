@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"encoding/json"
+	"github.com/core-go/search"
 	"go-service/internal/commentthread"
 	"net/http"
 )
@@ -30,6 +31,9 @@ func (h *CommentThreadSearchHandler) Search(w http.ResponseWriter, r *http.Reque
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
 		return
+	}
+	if filter.Filter != nil {
+		search.RepairFilter(filter.Filter)
 	}
 
 	list, total, err := h.service.Search(r.Context(), &filter)
