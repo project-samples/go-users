@@ -605,10 +605,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	filmCommentThreadSearchHandler := searchcommentthread.NewSearchCommentThreadHandler(filmCommentSearchBuilder)
 
-	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmcomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
+	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmratecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
 	filmCommentThreadReplyHandler := muxcomment.NewCommentHandler(filmCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	filmCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "filmcommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
-		"filmcomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
+		"filmratecomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
 		"filmcommentinfo", "commentid", "filmcommentthreadreaction", "commentid", "filmcommentreaction", "commentId")
 	filmCommentThreadHandler := muxcommentthread.NewCommentThreadHandler(filmCommentThreadService, shortid.Generate, "commentId", "author", "id")
 
