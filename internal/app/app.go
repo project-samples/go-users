@@ -3,13 +3,12 @@ package app
 import (
 	"context"
 	bofilm "go-service/internal/backoffice/film"
-	"go-service/internal/commentthread"
-	commentthreadreply "go-service/internal/commentthread/comment"
-	muxcomment "go-service/internal/commentthread/comment/mux"
-	muxcommentthread "go-service/internal/commentthread/mux"
-	commentthreadreaction "go-service/internal/commentthread/reaction"
-	searchcommentthread "go-service/internal/commentthread/search"
-	"go-service/internal/userinfo"
+	"go-service/internal/reaction/commentthread"
+	commentthreadreply "go-service/internal/reaction/commentthread/comment"
+	muxcomment "go-service/internal/reaction/commentthread/comment/mux"
+	muxcommentthread "go-service/internal/reaction/commentthread/mux"
+	threadreaction "go-service/internal/reaction/commentthread/reaction"
+	commentthreadsearch "go-service/internal/reaction/commentthread/search"
 	"reflect"
 
 	. "github.com/core-go/auth"
@@ -40,14 +39,14 @@ import (
 	// "github.com/core-go/reaction/save"
 	// userreaction "github.com/core-go/reaction/user-reaction"
 
-	"go-service/internal/rate"
-	"go-service/internal/rate/rates"
-	searchrate "go-service/internal/rate/search"
 	"go-service/internal/reaction"
 	"go-service/internal/reaction/comment"
 	commentmux "go-service/internal/reaction/comment/mux"
 	searchcomment "go-service/internal/reaction/comment/search"
 	"go-service/internal/reaction/follow"
+	"go-service/internal/reaction/rate"
+	searchrate "go-service/internal/reaction/rate/search"
+	"go-service/internal/reaction/rates"
 	"go-service/internal/reaction/response"
 	searchresponse "go-service/internal/reaction/response/response"
 	"go-service/internal/reaction/save"
@@ -124,11 +123,11 @@ type ApplicationContext struct {
 	Production          *q.QueryHandler
 	Location            location.LocationHandler
 	LocationRate        rate.RateHandler
-	SearchLocationRate  *search.SearchHandler
+	SearchLocationRate  *searchrate.RateSearchHandler
 	MyArticles          myarticles.ArticleHandler
 	Article             article.ArticleHandler
 	ArticleRate         rate.RateHandler
-	ArticleRateSearch   *search.SearchHandler
+	ArticleRateSearch   *searchrate.RateSearchHandler
 	ArticleRateReaction reaction.ReactionHandler
 	Appreciation        appreciation.AppreciationHandler
 	Follow              follow.FollowHandler
@@ -145,36 +144,44 @@ type ApplicationContext struct {
 	CinemaResponse       response.ResponseHandler
 	CinemaSearchRate     *searchrate.RateSearchHandler
 	CinemaSearchResponse *search.SearchHandler
-	CinemaSearchComment  *searchcommentthread.CommentThreadSearchHandler
+	CinemaSearchComment  *commentthreadsearch.CommentThreadSearchHandler
 	Cinema               cinema.CinemaHandler
 
-	Item                  item.ItemHandler
-	MyItem                myitem.MyItemHandler
-	Company               company.CompanyHandler
-	Film                  film.FilmHandler
-	BackofficeCinema      bocinema.CinemaHandler
-	BackofficeFilm        bofilm.BackOfficeFilmHandler
-	BackofficeCompany     bocompany.BackofficeCompanyHandler
-	FilmCategory          category.CategoryHandler
-	CompanyCategory       category.CategoryHandler
-	ItemCategory          category.CategoryHandler
-	SavedFilm             save.SaveHandler
-	Savedlocation         saveditem.SaveHandler
-	FollowLocation        follow.FollowHandler
-	LocationInfomation    locationinfomation.LocationInfomationHandler
-	LocationReaction      reaction.ReactionHandler
-	LocationComment       commentmux.CommentHandler
-	SearchLocationComment *search.SearchHandler
-	BackofficeLocation    bolocation.BackOfficeLocationHandler
+	Item              item.ItemHandler
+	MyItem            myitem.MyItemHandler
+	Company           company.CompanyHandler
+	Film              film.FilmHandler
+	BackofficeCinema  bocinema.CinemaHandler
+	BackofficeFilm    bofilm.BackOfficeFilmHandler
+	BackofficeCompany bocompany.BackofficeCompanyHandler
+	FilmCategory      category.CategoryHandler
+	CompanyCategory   category.CategoryHandler
+	ItemCategory      category.CategoryHandler
+	SavedFilm         save.SaveHandler
+	Savedlocation     saveditem.SaveHandler
+	FollowLocation    follow.FollowHandler
 
-	ArticleComment                    commentmux.CommentHandler
-	ArticleCommentThread              muxcommentthread.CommentThreadHandler
-	ArticleCommentThreadReply         muxcomment.CommentHandler
-	ArticleCommentThreadReaction      commentthreadreaction.CommentReactionHandler
-	ArticleCommentThreadReplyReaction commentthreadreaction.CommentReactionHandler
+	LocationInfomation                 locationinfomation.LocationInfomationHandler
+	LocationReaction                   reaction.ReactionHandler
+	LocationComment                    commentmux.CommentHandler
+	SearchLocationComment              *search.SearchHandler
+	SearchLocationCommentThread        *commentthreadsearch.CommentThreadSearchHandler
+	LocationCommentReply               muxcomment.CommentHandler
+	LocationCommentThread              muxcommentthread.CommentThreadHandler
+	LocationCommentThreadReaction      threadreaction.CommentReactionHandler
+	LocationCommentThreadReplyReaction threadreaction.CommentReactionHandler
+
+	BackofficeLocation bolocation.BackOfficeLocationHandler
+
+	ArticleComment            commentmux.CommentHandler
+	ArticleCommentThread      muxcommentthread.CommentThreadHandler
+	ArticleCommentThreadReply muxcomment.CommentHandler
+
+	ArticleCommentThreadReaction      threadreaction.CommentReactionHandler
+	ArticleCommentThreadReplyReaction threadreaction.CommentReactionHandler
 
 	SearchArticleComment       *searchrate.RateSearchHandler
-	SearchArticleCommentThread *searchcommentthread.CommentThreadSearchHandler
+	SearchArticleCommentThread *commentthreadsearch.CommentThreadSearchHandler
 
 	Job             job.JobHandler
 	Room            room.RoomHandler
@@ -185,7 +192,7 @@ type ApplicationContext struct {
 	BackofficeJob   bojob.BackofficeJobHandler
 
 	SearchCompanyRate    *searchrate.RateSearchHandler
-	SearchCompanyComment *searchcommentthread.CommentThreadSearchHandler
+	SearchCompanyComment *commentthreadsearch.CommentThreadSearchHandler
 	CompanyRate          rates.RatesHandler
 	CompanyReaction      reaction.ReactionHandler
 	CompanyComment       commentmux.CommentHandler
@@ -202,9 +209,9 @@ type ApplicationContext struct {
 	FilmCommentThread              muxcommentthread.CommentThreadHandler
 	FilmRate                       rate.RateHandler
 	FilmCommentThreadReply         muxcomment.CommentHandler
-	SearchFilmCommentThread        *searchcommentthread.CommentThreadSearchHandler
-	FilmCommentThreadReaction      commentthreadreaction.CommentReactionHandler
-	FilmCommentThreadReplyReaction commentthreadreaction.CommentReactionHandler
+	SearchFilmCommentThread        *commentthreadsearch.CommentThreadSearchHandler
+	FilmCommentThreadReaction      threadreaction.CommentReactionHandler
+	FilmCommentThreadReplyReaction threadreaction.CommentReactionHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
@@ -411,7 +418,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	myProfileHandler := myprofile.NewMyProfileHandler(myProfileService, log.LogError, nil, skillService.Save, interestService.Save, lookingForService.Save,
 		educationService.Save, companiesService.Save, workService.Save, uploadService, conf.KeyFile, generateId)
 	// user info
-	loadUserInfo := userinfo.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	rateUserInforeply := commentthreadreply.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 
 	// LOCATION
 
@@ -448,19 +455,20 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// search location rate
 	locationRateType := reflect.TypeOf(rate.Rate{})
-	locationRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
+	locationRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+
 	locationRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "locationrate", templates, &locationRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	locationRateSearchBuilder, err := s.NewSearchBuilder(db, locationRateType, locationRateQuery)
+	locationRateSearchBuilder, err := searchrate.NewRateSearchService(db, locationRateQuery, pq.Array, locationRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
-	searchLocationRateHandler := search.NewSearchHandler(locationRateSearchBuilder.Search, locationRateType, locationRateFilterType, logError, nil)
+	searchLocationRateHandler := searchrate.NewSearchRateHandler(locationRateSearchBuilder)
 
 	// locationRateService := locationrate.NewLocationRateService(db)
-	locationRateService := rate.NewRateService(db, "locationrate", "id", "author", "anonymous", "rate", "review", "ratetime", "usefulcount", "replycount", "locationinfo", "id", "rate", "count", "score", pq.Array)
+	locationRateService := rate.NewRateService(db, "locationrate", "id", "author", "anonymous", "rate", "review", "time", "usefulcount", "replycount", "locationinfo", "id", "rate", "count", "score", pq.Array)
 	locationRateHandler := rate.NewRateHandler(locationRateService, 0, 1, 5)
 
 	// saved location
@@ -494,7 +502,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	locationReactionHandler := reaction.NewReactionHandler(locationReactionService, 0, 2, 3)
 
 	// comment location
-	locationCommentService := comment.NewCommentService(db, "locationcomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "locationrate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
+	locationUserInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	locationCommentService := comment.NewCommentService(db, "locationcomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "locationrate", "id", "author", "replycount", "users", "id", "imageurl", "username", locationUserInfo.Load, pq.Array)
 	locationCommentHandler := commentmux.NewCommentHandler(locationCommentService, "commentId", "id", "author", "userId")
 
 	// search location
@@ -506,6 +515,32 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	searchLocationCommentHandler := search.NewSearchHandler(locationCommentSearchBuilder.Search, locationCommentType, locationCommentFilterType, logError, nil)
+	locationCommentThreadType := reflect.TypeOf(commentthread.CommentThread{})
+
+	locationCommentThreadQuery, err := template.UseQueryWithArray(conf.Template, nil, "locationcommentthread", templates, &locationCommentThreadType, convert.ToMap, buildParam)
+	if err != nil {
+		return nil, err
+	}
+	locationQueryUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	locationCommentThreadBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, locationCommentThreadQuery, pq.Array, locationQueryUserInfo.Load, s.BuildFromQuery, search.GetOffset)
+	if err != nil {
+		return nil, err
+	}
+
+	locationCommentThreadSearchHandler := commentthreadsearch.NewSearchCommentThreadHandler(locationCommentThreadBuilder)
+	locationCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "locationcommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
+		"locationreplycomment", "commentid", "commentthreadid", "locationcommentthreadinfo", "commentid",
+		"locationreplycommentinfo", "commentid", "locationcommentthreadreaction", "commentid", "locationreplycommentreaction", "commentId")
+	locationCommentThreadHandler := muxcommentthread.NewCommentThreadHandler(locationCommentThreadService, shortid.Generate, "commentId", "author", "id")
+
+	locationCommentThreadReactionService := threadreaction.NewCommentReactionService(db, "locationcommentthreadreaction", "commentid", "author", "userId", "time", "reaction", "locationcommentthreadinfo", "commentId", "usefulcount")
+	locationCommentThreadReactionHandler := threadreaction.NewCommentReactionHandler(locationCommentThreadReactionService, 3, 2, 0)
+
+	locationCommentThreadReplyService := commentthreadreply.NewCommentService(db, "locationreplycomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "locationcommentthreadinfo", "usefulcount", "commentId", "locationcommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
+	locationCommentThreadReplyHandler := muxcomment.NewCommentHandler(locationCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
+
+	locationCommentThreadReplyReactionService := threadreaction.NewCommentReactionService(db, "locationreplycommentreaction", "commentId", "author", "userId", "time", "reaction", "locationreplycommentinfo", "commentId", "usefulcount")
+	locationCommentThreadReplyReactionHandler := threadreaction.NewCommentReactionHandler(locationCommentThreadReplyReactionService, 3, 2, 0)
 
 	// myarticlesType := reflect.TypeOf(myarticles.Article{})
 	// myarticlesQuery := query.UseQuery(myarticlesType)
@@ -552,14 +587,19 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
+	articleQueryUserInfoSearchrate := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
 
-	searchArticleCommentBuilder, err := searchrate.NewRateSearchService(db, searchArticleCommentQuery, pq.Array, loadUserInfo.Load)
+	searchArticleCommentBuilder, err := searchrate.NewRateSearchService(db, searchArticleCommentQuery, pq.Array, articleQueryUserInfoSearchrate.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
 	searchArticleRateCommentHandler := searchrate.NewSearchRateHandler(searchArticleCommentBuilder)
+	articleCommentInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 
-	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
+	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid",
+		"id", "author", "userid", "comment", "anonymous", "time", "updatedat",
+		"articlerate", "id", "author", "replycount", "users", "id", "imageurl", "username",
+		articleCommentInfo.Load, pq.Array)
 	articleCommentHandler := commentmux.NewCommentHandler(articleCommentService, "commentId", "id", "author", "userId")
 
 	articleRateService := rate.NewRateService(db, "articlerate", "id", "author", "anonymous", "rate", "review", "time", "usefulcount",
@@ -567,16 +607,17 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	articleRateHandler := rate.NewRateHandler(articleRateService, 0, 1, 5)
 
 	articleRateType := reflect.TypeOf(searchrate.Rate{})
-	articleRateFilterType := reflect.TypeOf(searchrate.RateFilter{})
+	articleRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	rateType := reflect.TypeOf(searchrate.Rate{})
 	articleRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlerate", templates, &articleRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	articleRateSearchBuilder, err := s.NewSearchBuilderWithArray(db, articleRateType, articleRateQuery, pq.Array)
+	articleRateSearchBuilder, err := searchrate.NewRateSearchService(db, articleRateQuery, pq.Array, articleRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
-	articleRateSearchHandler := search.NewSearchHandler(articleRateSearchBuilder.Search, articleRateType, articleRateFilterType, logError, nil)
+	articleRateSearchHandler := searchrate.NewSearchRateHandler(articleRateSearchBuilder)
 
 	articleRateReactionService := reaction.NewReactionService(db, "articleratereaction", "id", "author", "userid", "time", "reaction", "articlerate", "id", "author", "usefulcount")
 	articleRateReactionHandler := reaction.NewReactionHandler(articleRateReactionService, 0, 2, 3)
@@ -585,12 +626,14 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	articleCommentThreadBuilder, err := searchcommentthread.NewCommentThreadSearchService(db, articleCommentThreadQuery, pq.Array, loadUserInfo.Load)
+	articleloadUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+
+	articleCommentThreadBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, articleCommentThreadQuery, pq.Array, articleloadUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	articleCommentThreadSearchHandler := searchcommentthread.NewSearchCommentThreadHandler(articleCommentThreadBuilder)
+	articleCommentThreadSearchHandler := commentthreadsearch.NewSearchCommentThreadHandler(articleCommentThreadBuilder)
 
 	// ------------- FILM-------------
 	commentThreadType := reflect.TypeOf(commentthread.CommentThread{})
@@ -598,37 +641,37 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	filmCommentSearchBuilder, err := searchcommentthread.NewCommentThreadSearchService(db, filmCommentThreadQuery, pq.Array, loadUserInfo.Load)
+	filmQueryUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	filmCommentSearchBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, filmCommentThreadQuery, pq.Array, filmQueryUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
-	filmCommentThreadSearchHandler := searchcommentthread.NewSearchCommentThreadHandler(filmCommentSearchBuilder)
+	filmCommentThreadSearchHandler := commentthreadsearch.NewSearchCommentThreadHandler(filmCommentSearchBuilder)
 
-	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmratecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmcommentreaction", "commentId", "users", "id", "username", "imageurl", "filmcommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
+	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmreplycomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmreplycommentreaction", "commentId", "users", "id", "username", "imageurl", "filmreplycommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
 	filmCommentThreadReplyHandler := muxcomment.NewCommentHandler(filmCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	filmCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "filmcommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
-		"filmratecomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
-		"filmcommentinfo", "commentid", "filmcommentthreadreaction", "commentid", "filmcommentreaction", "commentId")
+		"filmreplycomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
+		"filmreplycommentinfo", "commentid", "filmcommentthreadreaction", "commentid", "filmreplycommentreaction", "commentId")
 	filmCommentThreadHandler := muxcommentthread.NewCommentThreadHandler(filmCommentThreadService, shortid.Generate, "commentId", "author", "id")
 
-	filmCommentThreadReactionService := commentthreadreaction.NewCommentReactionService(db, "filmcommentthreadreaction", "commentid", "author", "userId", "time", "reaction", "filmcommentthreadinfo", "commentId", "usefulcount")
-	filmCommentThreadReactionHandnler := commentthreadreaction.NewCommentReactionHandler(filmCommentThreadReactionService, 3, 2, 0)
-	filmCommentThreadReplyReactionService := commentthreadreaction.NewCommentReactionService(db, "filmcommentreaction", "commentId", "author", "userId", "time", "reaction", "filmcommentinfo", "commentId", "usefulcount")
-	filmCommentThreadReplyReactionHandler := commentthreadreaction.NewCommentReactionHandler(filmCommentThreadReplyReactionService, 3, 2, 0)
+	filmCommentThreadReactionService := threadreaction.NewCommentReactionService(db, "filmcommentthreadreaction", "commentid", "author", "userId", "time", "reaction", "filmcommentthreadinfo", "commentId", "usefulcount")
+	filmCommentThreadReactionHandler := threadreaction.NewCommentReactionHandler(filmCommentThreadReactionService, 3, 2, 0)
+	filmCommentThreadReplyReactionService := threadreaction.NewCommentReactionService(db, "filmreplycommentreaction", "commentId", "author", "userId", "time", "reaction", "filmreplycommentinfo", "commentId", "usefulcount")
+	filmCommentThreadReplyReactionHandler := threadreaction.NewCommentReactionHandler(filmCommentThreadReplyReactionService, 3, 2, 0)
 
 	// ------------- FILM-------------
 
-	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", loadUserInfo.Load, pq.Array)
+	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
 	articleCommentThreadReplyHandler := muxcomment.NewCommentHandler(articleCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
 		"articlecomment", "commentid", "commentthreadid", "articlecommentthreadinfo", "commentid",
 		"articlecommentinfo", "commentid", "articlecommentthreadreaction", "commentid", "articlecommentreaction", "commentId")
 	articleCommentThreadHandler := muxcommentthread.NewCommentThreadHandler(articleCommentThreadService, shortid.Generate, "commentId", "author", "id")
-	articleCommentThreadReactionService := commentthreadreaction.NewCommentReactionService(db, "articlecommentthreadreaction", "commentId", "author", "userId", "time", "reaction", "articlecommentthreadinfo", "commentId", "usefulcount")
-	articleCommentThreadReactionHandnler := commentthreadreaction.NewCommentReactionHandler(articleCommentThreadReactionService, 3, 2, 0)
-	articleCommentThreadReplyReactionService := commentthreadreaction.NewCommentReactionService(db, "articlecommentreaction", "commentId", "author", "userId", "time", "reaction", "articlecommentinfo", "commentId", "usefulcount")
-	articleCommentThreadReplyReactionHandler := commentthreadreaction.NewCommentReactionHandler(articleCommentThreadReplyReactionService, 3, 2, 0)
+	articleCommentThreadReactionService := threadreaction.NewCommentReactionService(db, "articlecommentthreadreaction", "commentId", "author", "userId", "time", "reaction", "articlecommentthreadinfo", "commentId", "usefulcount")
+	articleCommentThreadReactionHandnler := threadreaction.NewCommentReactionHandler(articleCommentThreadReactionService, 3, 2, 0)
+	articleCommentThreadReplyReactionService := threadreaction.NewCommentReactionService(db, "articlecommentreaction", "commentId", "author", "userId", "time", "reaction", "articlecommentinfo", "commentId", "usefulcount")
+	articleCommentThreadReplyReactionHandler := threadreaction.NewCommentReactionHandler(articleCommentThreadReplyReactionService, 3, 2, 0)
 	// Follow
 	followService := follow.NewFollowService(
 		db,
@@ -665,10 +708,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	appreciationHandler := appreciation.NewAppreciationHandler(appreciationService, modelStatus, log.LogError, validator.Validate, &action)
 
 	//Film Comment
+	filmRateQueryUserInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+
 	commentService := comment.NewCommentService(
 		db,
 		"filmratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat",
-		"filmrate", "id", "author", "replycount", "users", "id", "imageurl", "username", loadUserInfo.Load, pq.Array)
+		"filmrate", "id", "author", "replycount", "users", "id", "imageurl", "username", filmRateQueryUserInfo.Load, pq.Array)
 	commentHandler := commentmux.NewCommentHandler(commentService, "commentId", "id", "author", "userId")
 
 	// SearchComment
@@ -696,9 +741,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	rateHandler := rate.NewRateHandler(rateService, 0, 1, 10)
 
 	//Film Search Rate
-	rateType := reflect.TypeOf(searchrate.Rate{})
+	filmRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+
 	queryRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
-	rateSearchBuilder, err := searchrate.NewRateSearchService(db, queryRate, pq.Array, loadUserInfo.Load)
+	rateSearchBuilder, err := searchrate.NewRateSearchService(db, queryRate, pq.Array, filmRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -926,13 +972,15 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	cinemaCommentService := comment.NewCommentService(db, "cinemaratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "cinemarate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	cinemaCommentHandler := commentmux.NewCommentHandler(cinemaCommentService, "commentId", "id", "author", "userId")
 	// SearchCommentCinema
+	filmCommentThreadUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+
 	cinemaCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCinemaComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &cinemaCommentType, convert.ToMap, buildParam, pq.Array)
-	cinemaCommentSearchBuilder, err := searchcommentthread.NewCommentThreadSearchService(db, queryCinemaComment, pq.Array, loadUserInfo.Load)
+	cinemaCommentSearchBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, queryCinemaComment, pq.Array, filmCommentThreadUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
-	searchCinemaCommentHandler := searchcommentthread.NewSearchCommentThreadHandler(cinemaCommentSearchBuilder)
+	searchCinemaCommentHandler := commentthreadsearch.NewSearchCommentThreadHandler(cinemaCommentSearchBuilder)
 	// Cinema Reaction
 	cinemaReactionService := reaction.NewReactionService(
 		db,
@@ -947,10 +995,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"cinemarateinfo", "id", "rate", "count", "score",
 		pq.Array)
 	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, 0, 1, 5)
-
+	cinemaRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
 	//Cinema Search Rate
 	queryCinemaRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
-	cinemaRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCinemaRate, pq.Array, loadUserInfo.Load)
+	cinemaRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCinemaRate, pq.Array, cinemaRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -1054,7 +1102,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	companyRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCompanyRate, pq.Array, loadUserInfo.Load)
+	companyRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	companyRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCompanyRate, pq.Array, companyRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -1062,11 +1111,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// SearchResult Company
 	companyCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCompanyComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &companyCommentType, convert.ToMap, buildParam, pq.Array)
-	companyCommentSearchBuilder, err := searchcommentthread.NewCommentThreadSearchService(db, queryCompanyComment, pq.Array, loadUserInfo.Load)
+	companyCommentUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	companyCommentSearchBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, queryCompanyComment, pq.Array, companyCommentUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
-	searchCompanyCommentHandler := searchcommentthread.NewSearchCommentThreadHandler(companyCommentSearchBuilder)
+	searchCompanyCommentHandler := commentthreadsearch.NewSearchCommentThreadHandler(companyCommentSearchBuilder)
 
 	// Comment Company
 	// companyCommentService := comment.NewCommentService(db, "",)
@@ -1213,11 +1263,16 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		Savedlocation:        locationSaveHandler,
 		FollowLocation:       locationFollowHandler,
 
-		LocationInfomation: locationInfomationHandler,
-		LocationReaction:   locationReactionHandler,
-		LocationComment:    locationCommentHandler,
+		LocationInfomation:                 locationInfomationHandler,
+		LocationReaction:                   locationReactionHandler,
+		LocationComment:                    locationCommentHandler,
+		SearchLocationComment:              searchLocationCommentHandler,
+		SearchLocationCommentThread:        locationCommentThreadSearchHandler,
+		LocationCommentReply:               locationCommentThreadReplyHandler,
+		LocationCommentThread:              locationCommentThreadHandler,
+		LocationCommentThreadReaction:      locationCommentThreadReactionHandler,
+		LocationCommentThreadReplyReaction: locationCommentThreadReplyReactionHandler,
 
-		SearchLocationComment:      searchLocationCommentHandler,
 		BackofficeLocation:         boLocationHandler,
 		ArticleComment:             articleCommentHandler,
 		SearchArticleComment:       searchArticleRateCommentHandler,
@@ -1256,7 +1311,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		FilmCommentThread:      filmCommentThreadHandler,
 		FilmCommentThreadReply: filmCommentThreadReplyHandler,
 		// reaction
-		FilmCommentThreadReaction:      filmCommentThreadReactionHandnler,
+		FilmCommentThreadReaction:      filmCommentThreadReactionHandler,
 		FilmCommentThreadReplyReaction: filmCommentThreadReplyReactionHandler,
 	}
 	return &app, nil

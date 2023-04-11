@@ -34,7 +34,7 @@ func BuildCommentQuery(filter interface{}) (query string, params []interface{}) 
 	}
 	if len(s.Comment) > 0 {
 		where = append(where, fmt.Sprintf(`comment ilike %s`, q.BuildDollarParam(i)))
-		params = append(params, "%" + s.Comment + "%")
+		params = append(params, "%"+s.Comment+"%")
 		i++
 	}
 	if s.Time != nil {

@@ -3,14 +3,14 @@ package mux
 import (
 	"context"
 	"encoding/json"
-	sv "go-service/internal/commentthread/comment"
+	"go-service/internal/reaction/commentthread/comment"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 type CommentHandler struct {
-	service              sv.CommentService
+	service              comment.CommentService
 	commentThreadIdField string
 	userIdField          string
 	authorField          string
@@ -19,7 +19,7 @@ type CommentHandler struct {
 	GenerateId           func(context.Context) (string, error)
 }
 
-func NewCommentHandler(service sv.CommentService,
+func NewCommentHandler(service comment.CommentService,
 	commentThreadIdField string,
 	userIdField string,
 	authorField string,
@@ -56,7 +56,7 @@ func (h *CommentHandler) GetReplyComments(w http.ResponseWriter, r *http.Request
 }
 
 func (h *CommentHandler) Reply(w http.ResponseWriter, r *http.Request) {
-	var obj sv.Comment
+	var obj comment.Comment
 	commentThreadId := mux.Vars(r)[h.commentThreadIdField]
 	author := mux.Vars(r)[h.authorField]
 	id := mux.Vars(r)[h.idField]
@@ -97,7 +97,7 @@ func (h *CommentHandler) Reply(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CommentHandler) UpdateReply(w http.ResponseWriter, r *http.Request) {
-	var obj sv.Comment
+	var obj comment.Comment
 	commentId := mux.Vars(r)[h.commentIdField]
 	err := Decode(w, r, &obj)
 	if err != nil {

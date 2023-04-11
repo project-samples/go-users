@@ -1,4 +1,4 @@
-package userinfo
+package comment
 
 type Info struct {
 	Id          string  `json:"id,omitempty" gorm:"column:id;primary_key"`

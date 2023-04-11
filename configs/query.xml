@@ -713,39 +713,6 @@
     </if>
   </select>
 
-  <select id="articleratecomment">
-    select r.* from articleratecomment r
-    where
-    <if test="commentId != null">
-      commentId = #{commentId} and
-    </if> 
-    <if test="id != null">
-      id = #{id} and
-    </if> 
-    <if test="author != null">
-      author = #{author} and
-    </if> 
-    <if test="userId != null">
-      userId = #{userId} and
-    </if>   
-    <if test="comment != null">
-      comment ilike #{comment} and
-    </if>  
-    <if test="time != null">
-      time >= #{time} and
-    </if>
-    <if test="updateAt != null">
-      updateAt >= #{updateAt} and
-    </if>
-    <if test="histories != null">
-      histories in #{histories} and
-    </if>
-    1 = 1
-    <if test="sort != null">
-      order by ${sort}
-    </if>
-  </select>
-
   <select id="cinema">
     select * from cinema
     where
@@ -898,6 +865,88 @@
     on c.id = a.author
     <if test = "userId != null">
     left join articlecommentthreadreaction d
+    on a.commentId = d.commentId and d.userId = #{userId}
+    </if>
+    where
+    <if test = "commentId != null">
+      a.commentId = #{commentId} and
+    </if>
+    <if test = "id != null">
+      a.id = #{id} and
+    </if>
+    <if test="author != null">
+      a.author = #{author} and
+    </if>
+    <if test="time != null">
+      a.time >= #{time} and
+    </if>
+    <if test="updatedAt != null">
+      a.updatedAt >= #{updatedAt} and
+    </if>
+    <if test="histories != null">
+      a.histories in #{histories} and
+    </if>
+      1 = 1
+      <if test = "sort != null">
+        order by ${sort}
+      </if>
+  </select>
+  <select id="articleratecomment">
+    select a.*, b.replycount, b.usefulcount
+    <if test="userId != null">
+      ,
+      case
+        when d.reaction = 1 then true
+        else false
+      end
+        as disable
+    </if>
+    from articlecommentthread a
+    left join articlecommentthreadinfo b
+    on a.commentId = b.commentid
+    <if test = "userId != null">
+    left join articlecommentthreadreaction d
+    on a.commentId = d.commentId and d.userId = #{userId}
+    </if>
+    where
+    <if test = "commentId != null">
+      a.commentId = #{commentId} and
+    </if>
+    <if test = "id != null">
+      a.id = #{id} and
+    </if>
+    <if test="author != null">
+      a.author = #{author} and
+    </if>
+    <if test="time != null">
+      a.time >= #{time} and
+    </if>
+    <if test="updatedAt != null">
+      a.updatedAt >= #{updatedAt} and
+    </if>
+    <if test="histories != null">
+      a.histories in #{histories} and
+    </if>
+      1 = 1
+      <if test = "sort != null">
+        order by ${sort}
+      </if>
+  </select>
+  <select id="locationcommentthread">
+    select a.*, b.replycount, b.usefulcount
+    <if test="userId != null">
+      ,
+      case
+        when d.reaction = 1 then true
+        else false
+      end
+        as disable
+    </if>
+    from locationcommentthread a
+    left join locationcommentthreadinfo b
+    on a.commentId = b.commentid
+    <if test = "userId != null">
+    left join locationcommentthreadreaction d
     on a.commentId = d.commentId and d.userId = #{userId}
     </if>
     where

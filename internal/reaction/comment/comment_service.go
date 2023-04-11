@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	. "go-service/internal/userinfo"
 	"time"
 )
 
@@ -94,6 +93,9 @@ func (s *commentService) Load(ctx context.Context, id string, author string) ([]
 	ids := make([]string, 0)
 	for _, r := range comments {
 		ids = append(ids, r.Author)
+	}
+	if s.QueryInfo == nil {
+		return comments, nil
 	}
 	infos, err := s.QueryInfo(ids)
 	if err != nil {

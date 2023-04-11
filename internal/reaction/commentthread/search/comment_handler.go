@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/core-go/search"
-	"go-service/internal/commentthread"
+	commentthread2 "go-service/internal/reaction/commentthread"
 	"net/http"
 )
 
 type SearchResult struct {
-	List  []commentthread.CommentThread `json:"list"`
-	Total int64                         `json:"total"`
+	List  []commentthread2.CommentThread `json:"list"`
+	Total int64                          `json:"total"`
 }
 
 func NewSearchCommentThreadHandler(
@@ -26,7 +26,7 @@ type CommentThreadSearchHandler struct {
 }
 
 func (h *CommentThreadSearchHandler) Search(w http.ResponseWriter, r *http.Request) {
-	var filter commentthread.CommentThreadFilter
+	var filter commentthread2.CommentThreadFilter
 	er1 := Decode(w, r, &filter)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)

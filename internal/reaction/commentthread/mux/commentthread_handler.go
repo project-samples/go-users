@@ -3,17 +3,16 @@ package mux
 import (
 	"context"
 	"encoding/json"
+	commentthread2 "go-service/internal/reaction/commentthread"
 	"net/http"
 	"strings"
 	"time"
-
-	"go-service/internal/commentthread"
 
 	"github.com/gorilla/mux"
 )
 
 func NewCommentThreadHandler(
-	service commentthread.CommentThreadService,
+	service commentthread2.CommentThreadService,
 	GenerateId func(ctx context.Context) (string, error),
 	commentIdField string,
 	authorField string,
@@ -29,7 +28,7 @@ func NewCommentThreadHandler(
 }
 
 type CommentThreadHandler struct {
-	service        commentthread.CommentThreadService
+	service        commentthread2.CommentThreadService
 	generateId     func(ctx context.Context) (string, error)
 	commentIdField string
 	authorField    string
@@ -49,7 +48,7 @@ func (h *CommentThreadHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CommentThreadHandler) Comment(w http.ResponseWriter, r *http.Request) {
-	var comment commentthread.CommentThread
+	var comment commentthread2.CommentThread
 	t := time.Now()
 	er1 := Decode(w, r, &comment)
 	if er1 != nil {
@@ -83,7 +82,7 @@ func (h *CommentThreadHandler) Comment(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(comment.CommentId)
 }
 func (h *CommentThreadHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var comment commentthread.CommentThread
+	var comment commentthread2.CommentThread
 	err := Decode(w, r, &comment)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

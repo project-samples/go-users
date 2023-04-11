@@ -40,10 +40,6 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	user := "/users"
 	r.HandleFunc(user+"/search", app.User.Search).Methods(GET, POST)
 	r.HandleFunc(user+"/{id}", app.User.Load).Methods(GET)
-	r.HandleFunc(user+"/follow/{id}/{target}", app.Follow.Follow).Methods(GET)
-	r.HandleFunc(user+"/unfollow/{id}/{target}", app.Follow.UnFollow).Methods(DELETE)
-	r.HandleFunc(user+"/checkfollow/{id}/{target}", app.Follow.Check).Methods(GET)
-	r.HandleFunc(user+"/loadfollow/{id}", app.UserInfomation.Load).Methods(GET)
 
 	r.HandleFunc(user+"/rates/comments", app.SearchUserRateComment.Search).Methods(POST)
 	r.HandleFunc(user+"/rates/search", app.SearchUserRate.Search).Methods(GET, POST)
@@ -73,6 +69,11 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(location+"/search", app.Location.Search).Methods(GET, POST)
 	r.HandleFunc(location+"/{id}", app.Location.Load).Methods(GET)
 
+	r.HandleFunc(location+"/follow/{id}/{target}", app.Follow.Follow).Methods(GET)
+	r.HandleFunc(location+"/unfollow/{id}/{target}", app.Follow.UnFollow).Methods(DELETE)
+	r.HandleFunc(location+"/checkfollow/{id}/{target}", app.Follow.Check).Methods(GET)
+	r.HandleFunc(location+"/loadfollow/{id}", app.UserInfomation.Load).Methods(GET)
+
 	locationRate := "/locations/rates"
 	r.HandleFunc(locationRate+"/comments", app.SearchLocationComment.Search)
 	r.HandleFunc(locationRate+"/search", app.SearchLocationRate.Search).Methods(GET, POST)
@@ -83,6 +84,20 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(locationRate+"/{id}/{author}/comments/{userId}", app.LocationComment.Create).Methods(POST)
 	r.HandleFunc(locationRate+"/{id}/{author}/comments/{userId}/{commentId}", app.LocationComment.Update).Methods(PUT)
 	r.HandleFunc(locationRate+"/{id}/{author}/comments/{commentId}", app.LocationComment.Delete).Methods(DELETE)
+
+	locationcommentthread := "/locations/commentthread"
+	r.HandleFunc(locationcommentthread+"/search", app.SearchLocationCommentThread.Search).Methods(GET, POST)
+	r.HandleFunc(locationcommentthread+"/{commentThreadId}/reply", app.LocationCommentReply.GetReplyComments).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/{id}/{author}/reply/{commentThreadId}", app.LocationCommentReply.Reply).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/reply/{commentId}", app.LocationCommentReply.UpdateReply).Methods(PUT)
+	r.HandleFunc(locationcommentthread+"/{commentThreadId}/reply/{commentId}", app.LocationCommentReply.Delete).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/{id}/{author}", app.LocationCommentThread.Comment).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/{commentId}", app.LocationCommentThread.Update).Methods(PUT)
+	r.HandleFunc(locationcommentthread+"/{commentId}", app.LocationCommentThread.Delete).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReaction.SetUsetful).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReaction.RemoveUseful).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReplyReaction.SetUsetful).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReplyReaction.RemoveUseful).Methods(DELETE)
 
 	locationSave := "/locations/save"
 	r.HandleFunc(locationSave+"/{id}/{itemId}", app.Savedlocation.Save).Methods(GET)
@@ -119,8 +134,7 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(articlerate+"/{id}/{author}/comments/{commentId}", app.ArticleComment.Delete).Methods(DELETE)
 
 	articlecommentthread := "/articles/commentthread"
-	r.HandleFunc(articlecommentthread+"/search", app.SearchArticleCommentThread.Search).Methods(GET)
-	r.HandleFunc(articlecommentthread+"/search", app.SearchArticleCommentThread.Search).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/search", app.SearchArticleCommentThread.Search).Methods(GET, POST)
 	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply", app.ArticleCommentThreadReply.GetReplyComments).Methods(POST)
 	r.HandleFunc(articlecommentthread+"/{id}/{author}/reply/{commentThreadId}", app.ArticleCommentThreadReply.Reply).Methods(POST)
 	r.HandleFunc(articlecommentthread+"/reply/{commentId}", app.ArticleCommentThreadReply.UpdateReply).Methods(PUT)
@@ -132,6 +146,7 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(articlecommentthread+"/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReaction.RemoveUseful).Methods(DELETE)
 	r.HandleFunc(articlecommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReplyReaction.SetUsetful).Methods(POST)
 	r.HandleFunc(articlecommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReplyReaction.RemoveUseful).Methods(DELETE)
+
 	item := "/items"
 	r.HandleFunc(item+"/search", app.Item.Search).Methods(GET, POST)
 	r.HandleFunc(item+"/{id}", app.Item.Load).Methods(GET)

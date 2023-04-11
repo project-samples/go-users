@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	. "go-service/internal/userinfo"
 	"time"
 )
 
@@ -272,7 +271,7 @@ func (s *commentService) GetComments(ctx context.Context, commentThreadId string
 	for k, _ := range comments {
 		c := comments[k]
 		i := BinarySearch(infos, c.Author)
-		if i >= 0 && !c.Anonymous {
+		if i >= 0 {
 			comments[k].AuthorURL = &infos[i].Url
 			if infos[i].DisplayName != nil {
 				comments[k].AuthorName = infos[i].DisplayName
