@@ -455,7 +455,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// search location rate
 	locationRateType := reflect.TypeOf(rate.Rate{})
-	locationRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	locationRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 
 	locationRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "locationrate", templates, &locationRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
@@ -587,7 +587,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	articleQueryUserInfoSearchrate := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	articleQueryUserInfoSearchrate := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 
 	searchArticleCommentBuilder, err := searchrate.NewRateSearchService(db, searchArticleCommentQuery, pq.Array, articleQueryUserInfoSearchrate.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
@@ -607,7 +607,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	articleRateHandler := rate.NewRateHandler(articleRateService, 0, 1, 5)
 
 	articleRateType := reflect.TypeOf(searchrate.Rate{})
-	articleRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	articleRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 	rateType := reflect.TypeOf(searchrate.Rate{})
 	articleRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlerate", templates, &articleRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
@@ -741,7 +741,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	rateHandler := rate.NewRateHandler(rateService, 0, 1, 10)
 
 	//Film Search Rate
-	filmRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	filmRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 
 	queryRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	rateSearchBuilder, err := searchrate.NewRateSearchService(db, queryRate, pq.Array, filmRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
@@ -995,7 +995,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"cinemarateinfo", "id", "rate", "count", "score",
 		pq.Array)
 	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, 0, 1, 5)
-	cinemaRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	cinemaRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 	//Cinema Search Rate
 	queryCinemaRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	cinemaRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCinemaRate, pq.Array, cinemaRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
@@ -1102,7 +1102,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	companyRateUserInfo := searchrate.NewInfoQuery(db, "users", "imageURL", "id", "username", "displayname")
+	companyRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
 	companyRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCompanyRate, pq.Array, companyRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err

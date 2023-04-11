@@ -18,8 +18,8 @@ type Rate struct {
 	Histories   []Histories `json:"histories" gorm:"column:histories" bson:"histories,omitempty" dynamodbav:"histories,omitempty" firestore:"histories,omitempty"`
 	Disable     *bool       `json:"disable" gorm:"column:disable"`
 	Anonymous   bool        `json:"anonymous,omitempty" gorm:"column:anonymous" bson:"anonymous,omitempty" dynamodbav:"anonymous,omitempty" firestore:"anonymous,omitempty"`
-	AuthorURL   *string     `json:"authorURL,omitempty" gorm:"column:imageurl"`
-	AuthorName  *string     `json:"authorName,omitempty" gorm:"column:username"`
+	AuthorURL   *string     `json:"authorURL,omitempty" gorm:"column:-"`
+	AuthorName  *string     `json:"authorName,omitempty" gorm:"column:-"`
 }
 
 type Rates struct {

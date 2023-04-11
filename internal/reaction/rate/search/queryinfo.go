@@ -16,7 +16,7 @@ import (
 
 var collator = collate.New(language.Und)
 
-type InfoQuery struct {
+type queryInfo struct {
 	db          *sql.DB
 	table       string
 	url         string
@@ -27,11 +27,11 @@ type InfoQuery struct {
 
 var colsInfo, _ = q.GetColumnIndexes(reflect.TypeOf(Info{}))
 
-func NewInfoQuery(db *sql.DB, table string, url string, id string, name string, displayName string) InfoQuery {
-	return InfoQuery{db: db, table: table, url: url, id: id, name: name, displayName: displayName}
+func NewQueryInfo(db *sql.DB, table string, url string, id string, name string, displayName string) queryInfo {
+	return queryInfo{db: db, table: table, url: url, id: id, name: name, displayName: displayName}
 }
 
-func (i InfoQuery) Load(ids []string) ([]Info, error) {
+func (i queryInfo) Load(ids []string) ([]Info, error) {
 	rs := make([]Info, 0)
 	if len(ids) == 0 {
 		return rs, nil
