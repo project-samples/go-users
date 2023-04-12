@@ -418,7 +418,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	myProfileHandler := myprofile.NewMyProfileHandler(myProfileService, log.LogError, nil, skillService.Save, interestService.Save, lookingForService.Save,
 		educationService.Save, companiesService.Save, workService.Save, uploadService, conf.KeyFile, generateId)
 	// user info
-	rateUserInforeply := commentthreadreply.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	rateUserInforeply := commentthreadreply.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	// LOCATION
 
@@ -455,7 +455,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// search location rate
 	locationRateType := reflect.TypeOf(rate.Rate{})
-	locationRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	locationRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	locationRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "locationrate", templates, &locationRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
@@ -502,7 +502,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	locationReactionHandler := reaction.NewReactionHandler(locationReactionService, 0, 2, 3)
 
 	// comment location
-	locationUserInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	locationUserInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	locationCommentService := comment.NewCommentService(db, "locationcomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "locationrate", "id", "author", "replycount", "users", "id", "imageurl", "username", locationUserInfo.Load, pq.Array)
 	locationCommentHandler := commentmux.NewCommentHandler(locationCommentService, "commentId", "id", "author", "userId")
 
@@ -521,7 +521,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	locationQueryUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	locationQueryUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	locationCommentThreadBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, locationCommentThreadQuery, pq.Array, locationQueryUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
@@ -587,14 +587,14 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	articleQueryUserInfoSearchrate := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	articleQueryUserInfoSearchrate := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	searchArticleCommentBuilder, err := searchrate.NewRateSearchService(db, searchArticleCommentQuery, pq.Array, articleQueryUserInfoSearchrate.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
 	}
 	searchArticleRateCommentHandler := searchrate.NewSearchRateHandler(searchArticleCommentBuilder)
-	articleCommentInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	articleCommentInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	articleCommentService := comment.NewCommentService(db, "articleratecomment", "commentid",
 		"id", "author", "userid", "comment", "anonymous", "time", "updatedat",
@@ -607,7 +607,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	articleRateHandler := rate.NewRateHandler(articleRateService, 0, 1, 5)
 
 	articleRateType := reflect.TypeOf(searchrate.Rate{})
-	articleRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	articleRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	rateType := reflect.TypeOf(searchrate.Rate{})
 	articleRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlerate", templates, &articleRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
@@ -626,7 +626,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	articleloadUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	articleloadUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	articleCommentThreadBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, articleCommentThreadQuery, pq.Array, articleloadUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
@@ -641,7 +641,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	filmQueryUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	filmQueryUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	filmCommentSearchBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, filmCommentThreadQuery, pq.Array, filmQueryUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
@@ -708,7 +708,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	appreciationHandler := appreciation.NewAppreciationHandler(appreciationService, modelStatus, log.LogError, validator.Validate, &action)
 
 	//Film Comment
-	filmRateQueryUserInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	filmRateQueryUserInfo := comment.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	commentService := comment.NewCommentService(
 		db,
@@ -741,7 +741,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	rateHandler := rate.NewRateHandler(rateService, 0, 1, 10)
 
 	//Film Search Rate
-	filmRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	filmRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	queryRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	rateSearchBuilder, err := searchrate.NewRateSearchService(db, queryRate, pq.Array, filmRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
@@ -972,7 +972,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	cinemaCommentService := comment.NewCommentService(db, "cinemaratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "cinemarate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	cinemaCommentHandler := commentmux.NewCommentHandler(cinemaCommentService, "commentId", "id", "author", "userId")
 	// SearchCommentCinema
-	filmCommentThreadUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	filmCommentThreadUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 
 	cinemaCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCinemaComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &cinemaCommentType, convert.ToMap, buildParam, pq.Array)
@@ -995,7 +995,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		"cinemarateinfo", "id", "rate", "count", "score",
 		pq.Array)
 	cinemaRateHandler := rate.NewRateHandler(cinemaRateService, 0, 1, 5)
-	cinemaRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	cinemaRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	//Cinema Search Rate
 	queryCinemaRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	cinemaRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCinemaRate, pq.Array, cinemaRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
@@ -1102,7 +1102,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	companyRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	companyRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	companyRateSearchBuilder, err := searchrate.NewRateSearchService(db, queryCompanyRate, pq.Array, companyRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
@@ -1111,7 +1111,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	// SearchResult Company
 	companyCommentType := reflect.TypeOf(searchcomment.Comment{})
 	queryCompanyComment, _ := template.UseQueryWithArray(conf.Template, nil, "comment", templates, &companyCommentType, convert.ToMap, buildParam, pq.Array)
-	companyCommentUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname")
+	companyCommentUserInfo := commentthreadsearch.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
 	companyCommentSearchBuilder, err := commentthreadsearch.NewCommentThreadSearchService(db, queryCompanyComment, pq.Array, companyCommentUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
 		return nil, err
