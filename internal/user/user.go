@@ -63,12 +63,12 @@ type Info10 struct {
 	Score  int     `json:"score" gorm:"column:score"`
 }
 type Education struct {
-	School string    `json:"school,omitempty" gorm:"column:school" `
-	Degree string    `json:"degree,omitempty" gorm:"column:degree"`
-	Major  string    `json:"major,omitempty" gorm:"column:major"`
-	Title  string    `json:"title,omitempty" gorm:"column:title"`
-	From   time.Time `json:"from,omitempty" gorm:"column:from"`
-	To     time.Time `json:"to,omitempty" gorm:"column:to"`
+	School string `json:"school,omitempty" gorm:"column:school" `
+	Degree string `json:"degree,omitempty" gorm:"column:degree"`
+	Major  string `json:"major,omitempty" gorm:"column:major"`
+	Title  string `json:"title,omitempty" gorm:"column:title"`
+	From   string `json:"from,omitempty" gorm:"column:from"`
+	To     string `json:"to,omitempty" gorm:"column:to"`
 }
 
 func (c Education) Value() (driver.Value, error) {
@@ -84,11 +84,11 @@ func (c *Education) Scan(value interface{}) error {
 }
 
 type Company struct {
-	Id          *string   `json:"id" gorm:"column:id"`
-	Name        string    `json:"name" gorm:"column:name"`
-	Description string    `json:"description" gorm:"column:description"`
-	From        time.Time `json:"from" gorm:"column:from"`
-	To          time.Time `json:"to" gorm:"column:to"`
+	Id          *string `json:"id" gorm:"column:id"`
+	Name        string  `json:"name" gorm:"column:name"`
+	Description string  `json:"description" gorm:"column:description"`
+	From        string  `json:"from" gorm:"column:from"`
+	To          string  `json:"to" gorm:"column:to"`
 }
 
 func (c Company) Value() (driver.Value, error) {
@@ -104,12 +104,12 @@ func (c *Company) Scan(value interface{}) error {
 }
 
 type Work struct {
-	Name        string     `json:"name,omitempty" gorm:"column:name"`
-	Position    string     `json:"position,omitempty" gorm:"column:position"`
-	Description string     `json:"description,omitempty" gorm:"column:description"`
-	Item        []string   `json:"item,omitempty" gorm:"column:item"`
-	From        *time.Time `json:"from,omitempty" gorm:"column:from"`
-	To          *time.Time `json:"to,omitempty" gorm:"column:to"`
+	Name        string   `json:"name,omitempty" gorm:"column:name"`
+	Position    string   `json:"position,omitempty" gorm:"column:position"`
+	Description string   `json:"description,omitempty" gorm:"column:description"`
+	Item        []string `json:"item,omitempty" gorm:"column:item"`
+	From        string   `json:"from,omitempty" gorm:"column:from"`
+	To          string   `json:"to,omitempty" gorm:"column:to"`
 }
 
 func (c Work) Value() (driver.Value, error) {

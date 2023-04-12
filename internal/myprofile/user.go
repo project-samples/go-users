@@ -8,12 +8,13 @@ import (
 )
 
 type User struct {
-	UserId       string        `json:"userId,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty" validate:"required,max=40" match:"equal"`
+	UserId       string        `json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty" validate:"required,max=40" match:"equal"`
 	Username     string        `json:"username,omitempty" gorm:"column:username" bson:"username,omitempty" dynamodbav:"username,omitempty" firestore:"username,omitempty" validate:"required,max=100"`
 	Email        string        `json:"email,omitempty" gorm:"column:email" bson:"email,omitempty" dynamodbav:"email,omitempty" firestore:"email,omitempty" validate:"email,max=100"`
-	Phone        string        `json:"phone,omitempty" gorm:"column:phone" bson:"phone,omitempty" dynamodbav:"phone,omitempty" firestore:"phone,omitempty" validate:"required,phone,max=18"`
-	Occupation   string        `json:"occupation,omitempty" gorm:"column:occupation" bson:"occupation,omitempty" dynamodbav:"occupation,omitempty" firestore:"occupation,omitempty" `
-	Company      string        `json:"company,omitempty" gorm:"column:company" bson:"company,omitempty" dynamodbav:"company,omitempty" firestore:"company,omitempty" `
+	Phone        *string       `json:"phone,omitempty" gorm:"column:phone" bson:"phone,omitempty" dynamodbav:"phone,omitempty" firestore:"phone,omitempty" validate:"required,phone,max=18"`
+	Occupation   *string       `json:"occupation,omitempty" gorm:"column:occupation" bson:"occupation,omitempty" dynamodbav:"occupation,omitempty" firestore:"occupation,omitempty" `
+	Company      *string       `json:"company,omitempty" gorm:"column:company" bson:"company,omitempty" dynamodbav:"company,omitempty" firestore:"company,omitempty" `
+	Bio          *string       `json:"bio,omitempty" gorm:"column:bio" bson:"bio,omitempty" dynamodbav:"bio,omitempty" firestore:"bio,omitempty"`
 	DateOfBirth  *time.Time    `json:"dateOfBirth,omitempty" gorm:"column:dateofbirth" bson:"dateOfBirth,omitempty" dynamodbav:"dateOfBirth,omitempty" firestore:"dateOfBirth,omitempty"`
 	Interests    []string      `json:"interests,omitempty" gorm:"column:interests" bson:"interests,omitempty" dynamodbav:"interests,omitempty" firestore:"interests,omitempty"`
 	LookingFor   []string      `json:"lookingFor,omitempty" gorm:"column:lookingfor" bson:"lookingFor,omitempty" dynamodbav:"lookingFor,omitempty" firestore:"lookingFor,omitempty"`
@@ -24,6 +25,9 @@ type User struct {
 	Educations   []Education   `json:"educations,omitempty" gorm:"column:educations" bson:"educations,omitempty" dynamodbav:"educations,omitempty" firestore:"educations,omitempty"`
 	Works        []Works       `json:"works,omitempty" gorm:"column:works" bson:"works,omitempty" dynamodbav:"works,omitempty" firestore:"works,omitempty"`
 	Socials      *Socials      `json:"socials,omitempty" gorm:"column:socials" bson:"socials,omitempty" dynamodbav:"socials,omitempty" firestore:"socials,omitempty"`
+	Gallery      []UploadInfo  `json:"gallery,omitempty" gorm:"column:gallery" bson:"gallery,omitempty" dynamodbav:"gallery,omitempty" firestore:"gallery,omitempty"`
+	ImageURL     *string       `json:"imageURL,omitempty" gorm:"column:imageURL" bson:"imageURL,omitempty" dynamodbav:"imageURL,omitempty" firestore:"imageURL,omitempty"`
+	CoverURL     *string       `json:"coverURL,omitempty" gorm:"column:coverurl"`
 }
 type Education struct {
 	School string `json:"school,omitempty" gorm:"column:school" bson:"school,omitempty" dynamodbav:"school,omitempty" firestore:"school,omitempty" validate:"required"`
@@ -61,9 +65,9 @@ type Socials struct {
 	Linkedin  string `json:"hirable,omitempty" gorm:"column:hirable" bson:"hirable,omitempty" dynamodbav:"hirable,omitempty" firestore:"hirable,omitempty"`
 }
 type UploadInfo struct {
-	Source     string `json:"source,omitempty"`
-	TypeUpload string `json:"type,omitempty"`
-	Url        string `json:"url,omitempty" validate:"required"`
+	Source     string `json:"source,omitempty" gorm:"column:source" bson:"source,omitempty" dynamodbav:"source,omitempty" firestore:"source,omitempty"`
+	TypeUpload string `json:"type,omitempty" gorm:"column:type" bson:"type,omitempty" dynamodbav:"type,omitempty" firestore:"type,omitempty"`
+	Url        string `json:"url,omitempty"  gorm:"column:url" bson:"url,omitempty" dynamodbav:"url,omitempty" firestore:"url,omitempty" validate:"required"`
 }
 
 type Skills struct {
@@ -122,6 +126,17 @@ func (c Achievement) Value() (driver.Value, error) {
 	return json.Marshal(c)
 }
 func (c *Achievement) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
+}
+
+func (c UploadInfo) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+func (c *UploadInfo) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")

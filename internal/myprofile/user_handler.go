@@ -39,7 +39,7 @@ func NewMyProfileHandler(service UserService, logError func(context.Context, str
 	UploadHandler := upload.NewHandler(uploadService, logError, keyFile, generate)
 	return &myProfileHandler{service: service, Validate: validator.Validate, LogError: logError,
 		Keys: keys, Indexes: indexes, Status: s, SaveSkills: saveSkills, SaveInterests: saveInterests,
-		SaveLookingFor: saveLookingFor, SaveEducations: saveEducation, SaveCompanys: saveCompany, SaveWorks: saveWork,
+		SaveLookingFor: saveLookingFor, SaveEducations: saveEducation, SaveCompanies: saveCompany, SaveWorks: saveWork,
 		UploadHandler: UploadHandler}
 }
 
@@ -54,7 +54,7 @@ type myProfileHandler struct {
 	SaveInterests  func(ctx context.Context, values []string) (int64, error)
 	SaveLookingFor func(ctx context.Context, values []string) (int64, error)
 	SaveEducations func(ctx context.Context, values []string) (int64, error)
-	SaveCompanys   func(ctx context.Context, values []string) (int64, error)
+	SaveCompanies  func(ctx context.Context, values []string) (int64, error)
 	SaveWorks      func(ctx context.Context, values []string) (int64, error)
 	UploadHandler  storage.UploadHandler
 }
@@ -79,12 +79,12 @@ func (h *myProfileHandler) SaveMyProfile(w http.ResponseWriter, r *http.Request)
 				}
 				h.SaveSkills(r.Context(), skills)
 			}
-			if h.SaveCompanys != nil && len(user.Companies) > 0 {
+			if h.SaveCompanies != nil && len(user.Companies) > 0 {
 				company := make([]string, 0)
 				for _, s := range user.Companies {
 					company = append(company, s.Name)
 				}
-				h.SaveCompanys(r.Context(), company)
+				h.SaveCompanies(r.Context(), company)
 			}
 			if h.SaveEducations != nil && len(user.Educations) > 0 {
 				education := make([]string, 0)
