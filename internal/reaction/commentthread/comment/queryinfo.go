@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	q "github.com/core-go/sql"
 	"reflect"
 	"sort"
 
@@ -27,8 +26,6 @@ type queryInfo struct {
 	name        string
 	displayName string
 }
-
-var colsInfo, _ = q.GetColumnIndexes(reflect.TypeOf(Info{}))
 
 func NewQueryInfo(db *sql.DB, table string, url string, id string, name string, displayName string, toArray func(interface{}) interface {
 	driver.Valuer
