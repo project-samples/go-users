@@ -91,11 +91,7 @@ func (f *commentThreadSearchService) Search(ctx context.Context, rf *commentthre
 		i := BinarySearch(infos, c.Author)
 		if i >= 0 {
 			rates[k].AuthorURL = &infos[i].Url
-			if infos[i].DisplayName != nil {
-				rates[k].AuthorName = infos[i].DisplayName
-			} else {
-				rates[k].AuthorName = &infos[i].Name
-			}
+			rates[k].AuthorName = &infos[i].Name
 		}
 	}
 	if err != nil {
