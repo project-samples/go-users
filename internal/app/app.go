@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	bofilm "go-service/internal/backoffice/film"
+	cinema2 "go-service/internal/cinema"
 	"go-service/internal/reaction/commentthread"
 	commentthreadreply "go-service/internal/reaction/commentthread/comment"
 	muxcomment "go-service/internal/reaction/commentthread/comment/mux"
@@ -73,7 +74,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"go-service/internal/app/cinema"
 	"go-service/internal/appreciation"
 	"go-service/internal/article"
 	bocinema "go-service/internal/backoffice/cinema"
@@ -145,7 +145,7 @@ type ApplicationContext struct {
 	CinemaSearchRate     *searchrate.RateSearchHandler
 	CinemaSearchResponse *search.SearchHandler
 	CinemaSearchComment  *commentthreadsearch.CommentThreadSearchHandler
-	Cinema               cinema.CinemaHandler
+	Cinema               cinema2.CinemaHandler
 
 	Item              item.ItemHandler
 	MyItem            myitem.MyItemHandler
@@ -536,7 +536,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	locationCommentThreadReactionService := threadreaction.NewCommentReactionService(db, "locationcommentthreadreaction", "commentid", "author", "userId", "time", "reaction", "locationcommentthreadinfo", "commentId", "usefulcount")
 	locationCommentThreadReactionHandler := threadreaction.NewCommentReactionHandler(locationCommentThreadReactionService, 3, 2, 0)
 
-	locationCommentThreadReplyService := commentthreadreply.NewCommentService(db, "locationreplycomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "locationcommentthreadinfo", "usefulcount", "commentId", "locationcommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
+	locationCommentThreadReplyService := commentthreadreply.NewCommentService(db, "locationreplycomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "locationcommentthreadinfo", "usefulcount", "commentId", "locationcommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
 	locationCommentThreadReplyHandler := muxcomment.NewCommentHandler(locationCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 
 	locationCommentThreadReplyReactionService := threadreaction.NewCommentReactionService(db, "locationreplycommentreaction", "commentId", "author", "userId", "time", "reaction", "locationreplycommentinfo", "commentId", "usefulcount")
@@ -608,7 +608,6 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	articleRateType := reflect.TypeOf(searchrate.Rate{})
 	articleRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
-	rateType := reflect.TypeOf(searchrate.Rate{})
 	articleRateQuery, err := template.UseQueryWithArray(conf.Template, nil, "articlerate", templates, &articleRateType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
 		return nil, err
@@ -648,7 +647,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	filmCommentThreadSearchHandler := commentthreadsearch.NewSearchCommentThreadHandler(filmCommentSearchBuilder)
 
-	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmreplycomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "filmreplycommentreaction", "commentId", "users", "id", "username", "imageurl", "filmreplycommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
+	filmCommentThreadReplyService := commentthreadreply.NewCommentService(db, "filmreplycomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "histories", "commentthreadId", "reaction", "filmreplycommentreaction", "commentId", "users", "id", "username", "imageurl", "filmreplycommentinfo", "usefulcount", "commentId", "filmcommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
 	filmCommentThreadReplyHandler := muxcomment.NewCommentHandler(filmCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	filmCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "filmcommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
 		"filmreplycomment", "commentid", "commentthreadid", "filmcommentthreadinfo", "commentid",
@@ -662,7 +661,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// ------------- FILM-------------
 
-	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "parent", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
+	articleCommentThreadReplyService := commentthreadreply.NewCommentService(db, "articlecomment", "commentId", "author", "id", "updatedat", "comment", "userId", "time", "histories", "commentthreadId", "reaction", "articlecommentreaction", "commentId", "users", "id", "username", "imageurl", "articlecommentinfo", "usefulcount", "commentId", "articlecommentthreadinfo", "commentId", "replycount", "usefulcount", rateUserInforeply.Load, pq.Array)
 	articleCommentThreadReplyHandler := muxcomment.NewCommentHandler(articleCommentThreadReplyService, "commentThreadId", "userId", "author", "id", "commentId", generateId)
 	articleCommentThreadService := commentthread.NewCommentThreadService(db, pq.Array, "articlecommentthread", "commentId", "id", "author", "histories", "comment", "time", "userid", "updatedat",
 		"articlecomment", "commentid", "commentthreadid", "articlecommentthreadinfo", "commentid",
@@ -742,7 +741,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	//Film Search Rate
 	filmRateUserInfo := searchrate.NewQueryInfo(db, "users", "imageURL", "id", "username", "displayname", pq.Array)
-
+	rateType := reflect.TypeOf(searchrate.Rate{})
 	queryRate, _ := template.UseQueryWithArray(conf.Template, nil, "rate", templates, &rateType, convert.ToMap, buildParam, pq.Array)
 	rateSearchBuilder, err := searchrate.NewRateSearchService(db, queryRate, pq.Array, filmRateUserInfo.Load, s.BuildFromQuery, search.GetOffset)
 	if err != nil {
@@ -953,12 +952,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	boCinemaHandler := bocinema.NewBackOfficeCinemaHandler(boCinemaSearchBuilder.Search, nil,
 		boCinemaService, log.LogError, validator.Validate, modelStatus, action, boCinemaUploadService, conf.KeyFile, generateId)
 
-	cinemaType := reflect.TypeOf(cinema.Cinema{})
+	cinemaType := reflect.TypeOf(cinema2.Cinema{})
 	cinemaRepository, err := s.NewRepositoryWithArray(db, "cinema", cinemaType, pq.Array)
 	if err != nil {
 		return nil, err
 	}
-	cinemaService := cinema.NewCinemaService(cinemaRepository)
+	cinemaService := cinema2.NewCinemaService(cinemaRepository)
 	cinemaSearchQuery, err := template.UseQueryWithArray(conf.Template, nil, "cinema", templates, &cinemaType, convert.ToMap, buildParam, pq.Array)
 	if err != nil {
 		return nil, err
@@ -967,7 +966,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	cinemaHandler := cinema.NewCinemaHandler(cinemaSearchBuilder.Search, nil, cinemaService, log.LogError, validator.Validate, modelStatus, action)
+	cinemaHandler := cinema2.NewCinemaHandler(cinemaSearchBuilder.Search, nil, cinemaService, log.LogError, validator.Validate, modelStatus, action)
 
 	cinemaCommentService := comment.NewCommentService(db, "cinemaratecomment", "commentid", "id", "author", "userid", "comment", "anonymous", "time", "updatedat", "cinemarate", "id", "author", "replycount", "users", "id", "imageurl", "username", nil, pq.Array)
 	cinemaCommentHandler := commentmux.NewCommentHandler(cinemaCommentService, "commentId", "id", "author", "userId")
