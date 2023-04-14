@@ -2,14 +2,14 @@ package app
 
 import (
 	"context"
+	"github.com/core-go/reaction/commentthread"
+	commentthreadreply "github.com/core-go/reaction/commentthread/comment"
+	muxcomment "github.com/core-go/reaction/commentthread/comment/mux"
+	muxcommentthread "github.com/core-go/reaction/commentthread/mux"
+	threadreaction "github.com/core-go/reaction/commentthread/reaction"
+	commentthreadsearch "github.com/core-go/reaction/commentthread/search"
 	bofilm "go-service/internal/backoffice/film"
 	cinema2 "go-service/internal/cinema"
-	"go-service/internal/reaction/commentthread"
-	commentthreadreply "go-service/internal/reaction/commentthread/comment"
-	muxcomment "go-service/internal/reaction/commentthread/comment/mux"
-	muxcommentthread "go-service/internal/reaction/commentthread/mux"
-	threadreaction "go-service/internal/reaction/commentthread/reaction"
-	commentthreadsearch "go-service/internal/reaction/commentthread/search"
 	"reflect"
 
 	. "github.com/core-go/auth"
@@ -27,31 +27,19 @@ import (
 	mgo "github.com/core-go/mongo"
 	. "github.com/core-go/password"
 	sqlpm "github.com/core-go/password/sql"
-	// "github.com/core-go/rate"
-	// "github.com/core-go/rate/rates"
-	// searchrate "github.com/core-go/rate/search"
-	// "github.com/core-go/reaction"
-	// "github.com/core-go/reaction/comment"
-	// commentmux "github.com/core-go/reaction/comment/mux"
-	// searchcomment "github.com/core-go/reaction/comment/search"
-	// "github.com/core-go/reaction/follow"
-	// "github.com/core-go/reaction/response"
-	// searchresponse "github.com/core-go/reaction/response/response"
-	// "github.com/core-go/reaction/save"
-	// userreaction "github.com/core-go/reaction/user-reaction"
 
-	"go-service/internal/reaction"
-	"go-service/internal/reaction/comment"
-	commentmux "go-service/internal/reaction/comment/mux"
-	searchcomment "go-service/internal/reaction/comment/search"
-	"go-service/internal/reaction/follow"
-	"go-service/internal/reaction/rate"
-	searchrate "go-service/internal/reaction/rate/search"
-	"go-service/internal/reaction/rates"
-	"go-service/internal/reaction/response"
-	searchresponse "go-service/internal/reaction/response/response"
-	"go-service/internal/reaction/save"
-	userreaction "go-service/internal/reaction/user-reaction"
+	"github.com/core-go/reaction"
+	"github.com/core-go/reaction/comment"
+	commentmux "github.com/core-go/reaction/comment/mux"
+	searchcomment "github.com/core-go/reaction/comment/search"
+	"github.com/core-go/reaction/follow"
+	"github.com/core-go/reaction/rate"
+	searchrate "github.com/core-go/reaction/rate/search"
+	"github.com/core-go/reaction/rates"
+	"github.com/core-go/reaction/response"
+	searchresponse "github.com/core-go/reaction/response/response"
+	"github.com/core-go/reaction/save"
+	userreaction "github.com/core-go/reaction/user-reaction"
 
 	"github.com/core-go/redis"
 	"github.com/core-go/search"
@@ -95,7 +83,6 @@ import (
 	"go-service/internal/myprofile"
 	"go-service/internal/playlist"
 	"go-service/internal/room"
-	saveditem "go-service/internal/save"
 	"go-service/internal/user"
 	"go-service/internal/userinfomation"
 
@@ -131,7 +118,7 @@ type ApplicationContext struct {
 	ArticleRateReaction reaction.ReactionHandler
 	Appreciation        appreciation.AppreciationHandler
 	Follow              follow.FollowHandler
-	SavedItem           saveditem.SaveHandler
+	SavedItem           save.SaveHandler
 	Comment             commentmux.CommentHandler
 	Reaction            reaction.ReactionHandler
 	Response            response.ResponseHandler
@@ -158,7 +145,7 @@ type ApplicationContext struct {
 	CompanyCategory   category.CategoryHandler
 	ItemCategory      category.CategoryHandler
 	SavedFilm         save.SaveHandler
-	Savedlocation     saveditem.SaveHandler
+	Savedlocation     save.SaveHandler
 	FollowLocation    follow.FollowHandler
 
 	LocationInfomation                 locationinfomation.LocationInfomationHandler
@@ -473,10 +460,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// saved location
 
-	// locationSaveService := savedlocation.NewSavedLocationService(db, "savedlocation", "id", "items", 50)
-	// locationSaveHandler := savedlocation.NewSavedLocationHandler(locationSaveService, modelStatus, log.LogError, validator.Validate, &action)
-	locationSaveService := saveditem.NewSaveService(db, reflect.TypeOf(location.Location{}), "savedlocation", "id", "items", 50, "location", "id", pq.Array)
-	locationSaveHandler := saveditem.NewSaveHandler(locationSaveService, 0, 1)
+	locationSaveService := save.NewSaveService(db, reflect.TypeOf(location.Location{}), "savedlocation", "id", "items", 50, "location", "id", pq.Array)
+	locationSaveHandler := save.NewSaveHandler(locationSaveService, 0, 1)
 	// follow location
 	locationFollowService := follow.NewFollowService(db, "locationfollower", "id", "follower", "locationfollowing", "id", "following", "userinfo", "id", "followercount", "followingcount")
 	locationFollowHandler := follow.NewFollowHandler(locationFollowService, 0, 1)
@@ -763,10 +748,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	itemService := item.NewItemService(itemRepository)
 	itemHandler := item.NewItemHandler(itemSearchBuilder.Search, itemService, modelStatus, log.LogError, validator.Validate, &action)
 
-	// saveService := save.NewSaveService(db, "saveditem", "id", "items", 50)
-	// saveHandler := save.NewSaveHandler(saveService, modelStatus, log.LogError, validator.Validate, &action)
-	saveditemService := saveditem.NewSaveService(db, itemType, "saveditem", "id", "items", 50, "item", "id", pq.Array)
-	savedItemHandler := saveditem.NewSaveHandler(saveditemService, 1, 0)
+	favoritesItemService := save.NewSaveService(db, itemType, "saveditem", "id", "items", 50, "item", "id", pq.Array)
+	SavedItemHandler := save.NewSaveHandler(favoritesItemService, 1, 0)
 	// Item Response
 	responseService := response.NewResponseService(
 		db,
@@ -827,10 +810,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	filmHandler := film.NewFilmHandler(filmSearchBuilder.Search, filmService, log.LogError, nil)
 
 	// SaveFilm
-	// savedfilmService := film.NewSavedFilmService(db, "savedfilm", "items", "id", 50)
-	// savedFilmHandler := film.NewSavedFilmHanlder(savedfilmService)
-	savedfilmService := save.NewSaveService(db, "savedfilm", "id", "item", 50)
+	saveType := reflect.TypeOf(save.Items{})
+	savedfilmService := save.NewSaveService(db, saveType, "savedfilm", "id", "item",
+		50, "film", "id", pq.Array)
 	savedfilmHandler := save.NewSaveHandler(savedfilmService, 0, 1)
+
 	// Filmcategory
 	filmCategoryType := reflect.TypeOf(category.Category{})
 	filmCategoryQuery := sq.UseQuery(db, "filmcategory", filmCategoryType)
@@ -1233,7 +1217,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		ArticleRateReaction:  articleRateReactionHandler,
 		Appreciation:         appreciationHandler,
 		Follow:               followHandler,
-		SavedItem:            savedItemHandler,
+		SavedItem:            SavedItemHandler,
 		Comment:              commentHandler,
 		Reaction:             reactionHandler,
 		FilmRate:             rateHandler,

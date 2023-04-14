@@ -11,6 +11,7 @@ require (
 	github.com/core-go/mail v0.0.0
 	github.com/core-go/mongo v0.3.1
 	github.com/core-go/password v0.1.3
+	github.com/core-go/reaction v0.0.8
 	github.com/core-go/redis v0.0.1
 	github.com/core-go/search v0.2.8
 	github.com/core-go/security v0.1.0
@@ -23,10 +24,7 @@ require (
 	go.mongodb.org/mongo-driver v1.7.2
 )
 
-require (
-	github.com/google/uuid v1.3.0
-	golang.org/x/text v0.3.7
-)
+require github.com/google/uuid v1.3.0 // indirect
 
 require (
 	github.com/go-playground/validator/v10 v10.11.0 // indirect
