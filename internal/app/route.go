@@ -74,11 +74,6 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(location+"/search", app.Location.Search).Methods(GET, POST)
 	r.HandleFunc(location+"/{id}", app.Location.Load).Methods(GET)
 
-	r.HandleFunc(location+"/follow/{id}/{target}", app.Follow.Follow).Methods(GET)
-	r.HandleFunc(location+"/unfollow/{id}/{target}", app.Follow.UnFollow).Methods(DELETE)
-	r.HandleFunc(location+"/checkfollow/{id}/{target}", app.Follow.Check).Methods(GET)
-	r.HandleFunc(location+"/loadfollow/{id}", app.UserInfomation.Load).Methods(GET)
-
 	locationRate := "/locations/rates"
 	r.HandleFunc(locationRate+"/comments", app.SearchLocationComment.Search)
 	r.HandleFunc(locationRate+"/search", app.SearchLocationRate.Search).Methods(GET, POST)
@@ -112,7 +107,6 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc("/locations/follow/{id}/{target}", app.FollowLocation.Follow).Methods(GET)
 	r.HandleFunc("/locations/follow/{id}/{target}", app.FollowLocation.UnFollow).Methods(DELETE)
 	r.HandleFunc("/locations/checkfollow/{id}/{target}", app.FollowLocation.Check).Methods(GET)
-
 	r.HandleFunc("/locations/loadfollow/{id}", app.LocationInfomation.Load).Methods(GET)
 
 	myarticle := "/my-articles"

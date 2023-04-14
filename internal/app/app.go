@@ -463,7 +463,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	locationSaveService := save.NewSaveService(db, reflect.TypeOf(location.Location{}), "savedlocation", "id", "items", 50, "location", "id", pq.Array)
 	locationSaveHandler := save.NewSaveHandler(locationSaveService, 0, 1)
 	// follow location
-	locationFollowService := follow.NewFollowService(db, "locationfollower", "id", "follower", "locationfollowing", "id", "following", "userinfo", "id", "followercount", "followingcount")
+	locationFollowService := follow.NewFollowService(db, "locationfollower", "id", "follower", "locationfollowing", "id", "following", "locationinfomation", "id", "followercount", "followingcount")
 	locationFollowHandler := follow.NewFollowHandler(locationFollowService, 0, 1)
 	// information location
 	locationInfomationType := reflect.TypeOf(locationinfomation.LocationInfomation{})
