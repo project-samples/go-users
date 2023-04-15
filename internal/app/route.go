@@ -105,7 +105,7 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(locationSave+"/{id}/{itemId}", app.Savedlocation.Remove).Methods(DELETE)
 
 	r.HandleFunc("/locations/follow/{id}/{target}", app.FollowLocation.Follow).Methods(GET)
-	r.HandleFunc("/locations/follow/{id}/{target}", app.FollowLocation.UnFollow).Methods(DELETE)
+	r.HandleFunc("/locations/unfollow/{id}/{target}", app.FollowLocation.UnFollow).Methods(DELETE)
 	r.HandleFunc("/locations/checkfollow/{id}/{target}", app.FollowLocation.Check).Methods(GET)
 	r.HandleFunc("/locations/loadfollow/{id}", app.LocationInfomation.Load).Methods(GET)
 
