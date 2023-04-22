@@ -2,6 +2,7 @@ package company
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 
@@ -12,6 +13,7 @@ import (
 type CompanyHandler interface {
 	Search(w http.ResponseWriter, r *http.Request)
 	Load(w http.ResponseWriter, r *http.Request)
+	GetByUserId(w http.ResponseWriter, r *http.Request)
 }
 
 func NewCompanyHandler(
@@ -36,6 +38,15 @@ func (h *companyHandler) Load(w http.ResponseWriter, r *http.Request) {
 	id := sv.GetRequiredParam(w, r)
 	if len(id) > 0 {
 		result, err := h.service.Load(r.Context(), id)
+		sv.RespondModel(w, r, result, err, h.Error, nil)
+	}
+}
+
+func (h *companyHandler) GetByUserId(w http.ResponseWriter, r *http.Request) {
+	id := sv.GetRequiredParam(w, r)
+	if len(id) > 0 {
+		result, err := h.service.GetByUserId(r.Context(), id)
+		fmt.Print(result)
 		sv.RespondModel(w, r, result, err, h.Error, nil)
 	}
 }

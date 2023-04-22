@@ -9,7 +9,7 @@ import (
 type CompanyFilter struct {
 	*search.Filter
 	Id            string             `json:"id,omitempty" gorm:"primary_key;column:id" dynamodbav:"id,omitempty" firestore:"id,omitempty" match:"equal"`
-	Name          string             `json:"name,omitempty" gorm:"column:name" dynamodbav:"name,omitempty" firestore:"name,omitempty" validate:"max=120"`
+	Name          string             `json:"name,omitempty" gorm:"column:name" dynamodbav:"name,omitempty" firestore:"name,omitempty" validate:"max=120"  match:"prefix" q:"prefix"`
 	Description   string             `json:"description,omitempty" gorm:"column:description" dynamodbav:"description,omitempty" firestore:"description,omitempty" validate:"max=1000"`
 	Size          search.NumberRange `json:"size,omitempty" gorm:"column:size" dynamodbav:"size,omitempty" firestore:"size,omitempty"`
 	Address       string             `json:"address,omitempty" gorm:"column:address" validate:"max=255" dynamodbav:"address,omitempty" firestore:"address,omitempty"`

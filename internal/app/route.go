@@ -2,21 +2,24 @@ package app
 
 import (
 	"context"
-
 	. "github.com/core-go/security"
 	"github.com/gorilla/mux"
+	"go-service/internal/middwares/chain"
 )
 
-func Route(r *mux.Router, context context.Context, root Config) error {
+func Route(router *mux.Router, context context.Context, root Config) error {
 	app, err := NewApp(context, root)
 	if err != nil {
 		return err
 	}
+	auMiddleware := chain.New(app.AuthenticationChecker.Check)
+	rcMiddleware := chain.New(app.AuthenticationChecker.Check, app.AuthenticationChecker.AuthorizationReactionChecker)
 
-	r.HandleFunc("/health", app.Health.Check).Methods(GET)
-	r.Use(app.AuthTokenCheck.HandleAuthorization)
+	router.HandleFunc("/health", app.Health.Check).Methods(GET)
+	router.HandleFunc("/authenticate", app.Authentication.Authenticate).Methods(POST)
 
-	r.HandleFunc("/authenticate", app.Authentication.Authenticate).Methods(POST)
+	r := router.PathPrefix("/").Subrouter()
+
 	r.HandleFunc("/authentication/signout/{username}", app.SignOut.SignOut).Methods(GET)
 
 	r.HandleFunc("/password/change", app.Password.ChangePassword).Methods(POST)
@@ -40,6 +43,7 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	user := "/users"
 	r.HandleFunc(user+"/search", app.User.Search).Methods(GET, POST)
 	r.HandleFunc(user+"/{id}", app.User.Load).Methods(GET)
+	r.HandleFunc(user+"/loadfollow/{id}", app.UserInfomation.Load).Methods(GET)
 
 	r.HandleFunc(user+"/rates/comments", app.SearchUserRateComment.Search).Methods(POST)
 	r.HandleFunc(user+"/rates/search", app.SearchUserRate.Search).Methods(GET, POST)
@@ -59,15 +63,15 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(user+"/unreaction/{id}/{author}/{reaction}", app.UserReact.Unreact).Methods(DELETE)
 	r.HandleFunc(user+"/checkreaction/{id}/{author}", app.UserReact.CheckReact).Methods(GET)
 
-	r.HandleFunc("/my-profile/{id}", app.MyProfile.GetMyProfile).Methods(GET)
-	r.HandleFunc("/my-profile/{id}", app.MyProfile.SaveMyProfile).Methods(PATCH)
-	r.HandleFunc("/my-profile/{id}/settings", app.MyProfile.GetMySettings).Methods(GET)
-	r.HandleFunc("/my-profile/{id}/settings", app.MyProfile.SaveMySettings).Methods(PATCH)
-	r.HandleFunc("/my-profile/{id}/gallery", app.MyProfile.UploadGallery).Methods(POST)
-	r.HandleFunc("/my-profile/{id}/gallery", app.MyProfile.DeleteGalleryFile).Methods(DELETE)
-	r.HandleFunc("/my-profile/{id}/fetchImageGalleryUploaded", app.MyProfile.GetGallery).Methods(GET)
-	r.HandleFunc("/my-profile/{id}/upload", app.MyProfile.UploadImage).Methods(POST)
-	r.HandleFunc("/my-profile/{id}/cover", app.MyProfile.UploadCover).Methods(POST)
+	r.HandleFunc("/my-profile/{id}", auMiddleware.ThenFn(app.MyProfile.GetMyProfile)).Methods(GET)
+	r.HandleFunc("/my-profile/{id}", auMiddleware.ThenFn(app.MyProfile.SaveMyProfile)).Methods(PATCH)
+	r.HandleFunc("/my-profile/{id}/settings", auMiddleware.ThenFn(app.MyProfile.GetMySettings)).Methods(GET)
+	r.HandleFunc("/my-profile/{id}/settings", auMiddleware.ThenFn(app.MyProfile.SaveMySettings)).Methods(PATCH)
+	r.HandleFunc("/my-profile/{id}/gallery", auMiddleware.ThenFn(app.MyProfile.UploadGallery)).Methods(POST)
+	r.HandleFunc("/my-profile/{id}/gallery", auMiddleware.ThenFn(app.MyProfile.DeleteGalleryFile)).Methods(DELETE)
+	r.HandleFunc("/my-profile/{id}/fetchImageGalleryUploaded", auMiddleware.ThenFn(app.MyProfile.GetGallery)).Methods(GET)
+	r.HandleFunc("/my-profile/{id}/upload", auMiddleware.ThenFn(app.MyProfile.UploadImage)).Methods(POST)
+	r.HandleFunc("/my-profile/{id}/cover", auMiddleware.ThenFn(app.MyProfile.UploadCover)).Methods(POST)
 
 	location := "/locations"
 	r.HandleFunc(location, app.Location.Search).Methods(GET)
@@ -78,26 +82,26 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(locationRate+"/comments", app.SearchLocationComment.Search)
 	r.HandleFunc(locationRate+"/search", app.SearchLocationRate.Search).Methods(GET, POST)
 	r.HandleFunc(locationRate+"/{id}/{author}", app.LocationRate.Rate).Methods(POST)
-	r.HandleFunc(locationRate+"/{id}/{author}/useful/{userId}", app.LocationReaction.Create).Methods(POST)
-	r.HandleFunc(locationRate+"/{id}/{author}/useful/{userId}", app.LocationReaction.Delete).Methods(DELETE)
+	r.HandleFunc(locationRate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.LocationReaction.Create)).Methods(POST)
+	r.HandleFunc(locationRate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.LocationReaction.Delete)).Methods(DELETE)
 	r.HandleFunc(locationRate+"/{id}/{author}/comments", app.LocationComment.Load).Methods(GET)
-	r.HandleFunc(locationRate+"/{id}/{author}/comments/{userId}", app.LocationComment.Create).Methods(POST)
-	r.HandleFunc(locationRate+"/{id}/{author}/comments/{userId}/{commentId}", app.LocationComment.Update).Methods(PUT)
-	r.HandleFunc(locationRate+"/{id}/{author}/comments/{commentId}", app.LocationComment.Delete).Methods(DELETE)
+	r.HandleFunc(locationRate+"/{id}/{author}/comments/{userId}", rcMiddleware.ThenFn(app.LocationComment.Create)).Methods(POST)
+	r.HandleFunc(locationRate+"/{id}/{author}/comments/{userId}/{commentId}", rcMiddleware.ThenFn(app.LocationComment.Update)).Methods(PUT)
+	r.HandleFunc(locationRate+"/{id}/{author}/comments/{commentId}", rcMiddleware.ThenFn(app.LocationComment.Delete)).Methods(DELETE)
 
 	locationcommentthread := "/locations/commentthread"
 	r.HandleFunc(locationcommentthread+"/search", app.SearchLocationCommentThread.Search).Methods(GET, POST)
 	r.HandleFunc(locationcommentthread+"/{commentThreadId}/reply", app.LocationCommentReply.GetReplyComments).Methods(POST)
-	r.HandleFunc(locationcommentthread+"/{id}/{author}/reply/{commentThreadId}", app.LocationCommentReply.Reply).Methods(POST)
-	r.HandleFunc(locationcommentthread+"/reply/{commentId}", app.LocationCommentReply.UpdateReply).Methods(PUT)
-	r.HandleFunc(locationcommentthread+"/{commentThreadId}/reply/{commentId}", app.LocationCommentReply.Delete).Methods(DELETE)
-	r.HandleFunc(locationcommentthread+"/{id}/{author}", app.LocationCommentThread.Comment).Methods(POST)
-	r.HandleFunc(locationcommentthread+"/{commentId}", app.LocationCommentThread.Update).Methods(PUT)
-	r.HandleFunc(locationcommentthread+"/{commentId}", app.LocationCommentThread.Delete).Methods(DELETE)
-	r.HandleFunc(locationcommentthread+"/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReaction.SetUsetful).Methods(POST)
-	r.HandleFunc(locationcommentthread+"/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReaction.RemoveUseful).Methods(DELETE)
-	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReplyReaction.SetUsetful).Methods(POST)
-	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.LocationCommentThreadReplyReaction.RemoveUseful).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/{id}/{author}/reply/{commentThreadId}", rcMiddleware.ThenFn(app.LocationCommentReply.Reply)).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}", rcMiddleware.ThenFn(app.LocationCommentReply.UpdateReply)).Methods(PATCH)
+	r.HandleFunc(locationcommentthread+"/{commentThreadId}/reply/{commentId}/{author}", rcMiddleware.ThenFn(app.LocationCommentReply.Delete)).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/{id}/{author}", rcMiddleware.ThenFn(app.LocationCommentThread.Comment)).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/{commentId}/{author}", rcMiddleware.ThenFn(app.LocationCommentThread.Update)).Methods(PATCH)
+	r.HandleFunc(locationcommentthread+"/{commentId}/{author}", rcMiddleware.ThenFn(app.LocationCommentThread.Delete)).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.LocationCommentThreadReaction.SetUseful)).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.LocationCommentThreadReaction.RemoveUseful)).Methods(DELETE)
+	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.LocationCommentThreadReplyReaction.SetUseful)).Methods(POST)
+	r.HandleFunc(locationcommentthread+"/reply/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.LocationCommentThreadReplyReaction.RemoveUseful)).Methods(DELETE)
 
 	locationSave := "/locations/save"
 	r.HandleFunc(locationSave+"/{id}/{itemId}", app.Savedlocation.Save).Methods(GET)
@@ -124,27 +128,27 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	articlerate := "/articles/rates"
 	r.HandleFunc(articlerate+"/comments", app.SearchArticleComment.Search).Methods(POST)
 	r.HandleFunc(articlerate+"/search", app.ArticleRateSearch.Search).Methods(GET, POST)
-	r.HandleFunc(articlerate+"/{id}/{author}", app.ArticleRate.Rate).Methods(POST)
-	r.HandleFunc(articlerate+"/{id}/{author}/useful/{userId}", app.ArticleRateReaction.Create).Methods(POST)
-	r.HandleFunc(articlerate+"/{id}/{author}/useful/{userId}", app.ArticleRateReaction.Delete).Methods(DELETE)
+	r.HandleFunc(articlerate+"/{id}/{author}", rcMiddleware.ThenFn(app.ArticleRate.Rate)).Methods(POST)
+	r.HandleFunc(articlerate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.ArticleRateReaction.Create)).Methods(POST)
+	r.HandleFunc(articlerate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.ArticleRateReaction.Delete)).Methods(DELETE)
 	r.HandleFunc(articlerate+"/{id}/{author}/comments", app.ArticleComment.Load).Methods(GET)
 	r.HandleFunc(articlerate+"/{id}/{author}/comments/{userId}", app.ArticleComment.Create).Methods(POST)
-	r.HandleFunc(articlerate+"/{id}/{author}/comments/{userId}/{commentId}", app.ArticleComment.Update).Methods(PUT)
-	r.HandleFunc(articlerate+"/{id}/{author}/comments/{commentId}", app.ArticleComment.Delete).Methods(DELETE)
+	r.HandleFunc(articlerate+"/{id}/{author}/comments/{userId}/{commentId}", rcMiddleware.ThenFn(app.ArticleComment.Update)).Methods(PUT)
+	r.HandleFunc(articlerate+"/{id}/{author}/comments/{commentId}/{userId}", rcMiddleware.ThenFn(app.ArticleComment.Delete)).Methods(DELETE)
 
 	articlecommentthread := "/articles/commentthread"
 	r.HandleFunc(articlecommentthread+"/search", app.SearchArticleCommentThread.Search).Methods(GET, POST)
-	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply", app.ArticleCommentThreadReply.GetReplyComments).Methods(POST)
-	r.HandleFunc(articlecommentthread+"/{id}/{author}/reply/{commentThreadId}", app.ArticleCommentThreadReply.Reply).Methods(POST)
-	r.HandleFunc(articlecommentthread+"/reply/{commentId}", app.ArticleCommentThreadReply.UpdateReply).Methods(PUT)
-	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply/{commentId}", app.ArticleCommentThreadReply.Delete).Methods(DELETE)
-	r.HandleFunc(articlecommentthread+"/{id}/{author}", app.ArticleCommentThread.Comment).Methods(POST)
-	r.HandleFunc(articlecommentthread+"/{commentId}", app.ArticleCommentThread.Update).Methods(PUT)
-	r.HandleFunc(articlecommentthread+"/{commentId}", app.ArticleCommentThread.Delete).Methods(DELETE)
-	r.HandleFunc(articlecommentthread+"/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReaction.SetUsetful).Methods(POST)
-	r.HandleFunc(articlecommentthread+"/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReaction.RemoveUseful).Methods(DELETE)
-	r.HandleFunc(articlecommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReplyReaction.SetUsetful).Methods(POST)
-	r.HandleFunc(articlecommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.ArticleCommentThreadReplyReaction.RemoveUseful).Methods(DELETE)
+	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply", rcMiddleware.ThenFn(app.ArticleCommentThreadReply.GetReplyComments)).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/{id}/{author}/reply/{commentThreadId}", rcMiddleware.ThenFn(app.ArticleCommentThreadReply.Reply)).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/reply/{commentId}", rcMiddleware.ThenFn(app.ArticleCommentThreadReply.UpdateReply)).Methods(PATCH)
+	r.HandleFunc(articlecommentthread+"/{commentThreadId}/reply/{commentId}/{author}", rcMiddleware.ThenFn(app.ArticleCommentThreadReply.Delete)).Methods(DELETE)
+	r.HandleFunc(articlecommentthread+"/{id}/{author}", rcMiddleware.ThenFn(app.ArticleCommentThread.Comment)).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/{commentId}/{userId}", rcMiddleware.ThenFn(app.ArticleCommentThread.Update)).Methods(PATCH)
+	r.HandleFunc(articlecommentthread+"/{commentId}/{userId}", rcMiddleware.ThenFn(app.ArticleCommentThread.Delete)).Methods(DELETE)
+	r.HandleFunc(articlecommentthread+"/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.ArticleCommentThreadReaction.SetUseful)).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.ArticleCommentThreadReaction.RemoveUseful)).Methods(DELETE)
+	r.HandleFunc(articlecommentthread+"/reply/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.ArticleCommentThreadReplyReaction.SetUseful)).Methods(POST)
+	r.HandleFunc(articlecommentthread+"/reply/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.ArticleCommentThreadReplyReaction.RemoveUseful)).Methods(DELETE)
 
 	item := "/items"
 	r.HandleFunc(item+"/search", app.Item.Search).Methods(GET, POST)
@@ -178,27 +182,27 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	filmRate := "/films/rates"
 	r.HandleFunc(filmRate+"/search", app.FilmSearchRate.Search).Methods(GET, POST)
 	r.HandleFunc(filmRate+"/comments/search", app.SearchComment.Search).Methods(GET, POST)
-	r.HandleFunc(filmRate+"/{id}/{author}", app.FilmRate.Rate).Methods(POST)
-	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", app.Reaction.Create).Methods(POST)
-	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", app.Reaction.Delete).Methods(DELETE)
+	r.HandleFunc(filmRate+"/{id}/{author}", rcMiddleware.ThenFn(app.FilmRate.Rate)).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.Reaction.Create)).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.Reaction.Delete)).Methods(DELETE)
 	r.HandleFunc(filmRate+"/{id}/{author}/comments", app.Comment.Load).Methods(GET)
-	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}", app.Comment.Create).Methods(POST)
-	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}/{commentId}", app.Comment.Update).Methods(PUT)
-	r.HandleFunc(filmRate+"/{id}/{author}/comments/{commentId}", app.Comment.Delete).Methods(DELETE)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}", rcMiddleware.ThenFn(app.Comment.Create)).Methods(POST)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments/{userId}/{commentId}", rcMiddleware.ThenFn(app.Comment.Update)).Methods(PATCH)
+	r.HandleFunc(filmRate+"/{id}/{author}/comments/{commentId}/{userId}", rcMiddleware.ThenFn(app.Comment.Delete)).Methods(DELETE)
 
 	filmcommentthread := "/films/commentthread"
 	r.HandleFunc(filmcommentthread+"/search", app.SearchFilmCommentThread.Search).Methods(GET, POST)
 	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply", app.FilmCommentThreadReply.GetReplyComments).Methods(POST)
-	r.HandleFunc(filmcommentthread+"/{id}/{author}/reply/{commentThreadId}", app.FilmCommentThreadReply.Reply).Methods(POST)
-	r.HandleFunc(filmcommentthread+"/reply/{commentId}", app.FilmCommentThreadReply.UpdateReply).Methods(PUT)
-	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply/{commentId}", app.FilmCommentThreadReply.Delete).Methods(DELETE)
-	r.HandleFunc(filmcommentthread+"/{id}/{author}", app.FilmCommentThread.Comment).Methods(POST)
-	r.HandleFunc(filmcommentthread+"/{commentId}", app.FilmCommentThread.Update).Methods(PUT)
-	r.HandleFunc(filmcommentthread+"/{commentId}", app.FilmCommentThread.Delete).Methods(DELETE)
-	r.HandleFunc(filmcommentthread+"/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReaction.SetUsetful).Methods(POST)
-	r.HandleFunc(filmcommentthread+"/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReaction.RemoveUseful).Methods(DELETE)
-	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReplyReaction.SetUsetful).Methods(POST)
-	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}/useful/{userId}", app.FilmCommentThreadReplyReaction.RemoveUseful).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/{id}/{author}/reply/{commentThreadId}", rcMiddleware.ThenFn(app.FilmCommentThreadReply.Reply)).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}", rcMiddleware.ThenFn(app.FilmCommentThreadReply.UpdateReply)).Methods(PATCH)
+	r.HandleFunc(filmcommentthread+"/{commentThreadId}/reply/{commentId}/{author}", rcMiddleware.ThenFn(app.FilmCommentThreadReply.Delete)).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/{id}/{author}", rcMiddleware.ThenFn(app.FilmCommentThread.Comment)).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{commentId}/{author}", rcMiddleware.ThenFn(app.FilmCommentThread.Update)).Methods(PATCH)
+	r.HandleFunc(filmcommentthread+"/{commentId}/{author}", rcMiddleware.ThenFn(app.FilmCommentThread.Delete)).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.FilmCommentThreadReaction.SetUseful)).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.FilmCommentThreadReaction.RemoveUseful)).Methods(DELETE)
+	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.FilmCommentThreadReplyReaction.SetUseful)).Methods(POST)
+	r.HandleFunc(filmcommentthread+"/reply/{commentId}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.FilmCommentThreadReplyReaction.RemoveUseful)).Methods(DELETE)
 
 	// films category
 	filmCategory := "/films/categories"
@@ -230,18 +234,18 @@ func Route(r *mux.Router, context context.Context, root Config) error {
 	//companies
 	company := "/companies"
 	r.HandleFunc(company+"/search", app.Company.Search).Methods(GET, POST)
-	r.HandleFunc(company+"/{id}", app.Company.Load).Methods(GET)
+	r.HandleFunc(company+"/user/{id}", app.Company.GetByUserId).Methods(GET)
 
 	companyrate := "/companies/rates"
 	r.HandleFunc(companyrate+"/search", app.SearchCompanyRate.Search).Methods(GET, POST)
 	r.HandleFunc(companyrate+"/comments/search", app.SearchCompanyComment.Search).Methods(GET, POST)
-	r.HandleFunc(companyrate+"/{id}/{author}", app.CompanyRate.Rate).Methods(POST)
-	r.HandleFunc(companyrate+"/{id}/{author}/useful/{userId}", app.CompanyReaction.Create).Methods(POST)
-	r.HandleFunc(companyrate+"/{id}/{author}/useful/{userId}", app.CompanyReaction.Delete).Methods(DELETE)
+	r.HandleFunc(companyrate+"/{id}/{author}", rcMiddleware.ThenFn(app.CompanyRate.Rate)).Methods(POST)
+	r.HandleFunc(companyrate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.CompanyReaction.Create)).Methods(POST)
+	r.HandleFunc(companyrate+"/{id}/{author}/useful/{userId}", rcMiddleware.ThenFn(app.CompanyReaction.Delete)).Methods(DELETE)
 	r.HandleFunc(companyrate+"/{id}/{author}/comments", app.CompanyComment.Load).Methods(GET)
-	r.HandleFunc(companyrate+"/{id}/{author}/comments/{userId}", app.CompanyComment.Create).Methods(POST)
-	r.HandleFunc(companyrate+"/{id}/{author}/comments/{userId}/{commentId}", app.CompanyComment.Update).Methods(PUT)
-	r.HandleFunc(companyrate+"/{id}/{author}/comments/{commentId}", app.CompanyComment.Delete).Methods(DELETE)
+	r.HandleFunc(companyrate+"/{id}/{author}/comments/{userId}", rcMiddleware.ThenFn(app.CompanyComment.Create)).Methods(POST)
+	r.HandleFunc(companyrate+"/{id}/{author}/comments/{userId}/{commentId}", rcMiddleware.ThenFn(app.CompanyComment.Update)).Methods(PATCH)
+	r.HandleFunc(companyrate+"/{id}/{author}/comments/{userId}/{commentId}", rcMiddleware.ThenFn(app.CompanyComment.Delete)).Methods(DELETE)
 
 	// cinema
 	cinema := "/cinemas"

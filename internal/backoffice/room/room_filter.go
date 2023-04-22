@@ -27,7 +27,7 @@ type RoomFilter struct {
 }
 
 type Info struct {
-	id    string  `json:"-" gorm:"column:id,primary_key"`
+	id    string  `json:"-" gorm:"column:id;primary_key"`
 	rate  float64 `json:"rate" gorm:"column:rate"`
 	rate1 int32   `json:"rate1" gorm:"column:rate1"`
 	rate2 int32   `json:"rate2" gorm:"column:rate2"`

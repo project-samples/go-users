@@ -9,7 +9,7 @@ import (
 type CinemaFilter struct {
 	*search.Filter
 	Id        string     `json:"id,omitempty" gorm:"column:id;primary_key" validate:"max=40" match:"equal"`
-	Name      string     `json:"name,omitempty" gorm:"column:name" validate:"max=255"`
+	Name      string     `json:"name,omitempty" gorm:"column:name" validate:"max=255" match:"prefix" q:"prefix"`
 	Address   string     `json:"address,omitempty" gorm:"column:address" validate:"max=255"`
 	Parent    string     `json:"parent,omitempty" gorm:"column:parent" validate:"max=40"`
 	Status    string     `json:"status,omitempty" gorm:"column:status" validate:"max=1"`
@@ -26,7 +26,7 @@ type CinemaFilter struct {
 }
 
 type Info struct {
-	Id    string  `json:"-" gorm:"column:id,primary_key"`
+	Id    string  `json:"-" gorm:"column:id;primary_key"`
 	Rate  float64 `json:"rate" gorm:"column:rate"`
 	Rate1 int32   `json:"rate1" gorm:"column:rate1"`
 	Rate2 int32   `json:"rate2" gorm:"column:rate2"`

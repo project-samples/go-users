@@ -27,7 +27,7 @@ type Cinema struct {
 }
 
 type Info10 struct {
-	Id     string  `json:"-" gorm:"column:id,primary_key"`
+	Id     string  `json:"-" gorm:"column:id;primary_key"`
 	Rate   float64 `json:"rate" gorm:"column:rate"`
 	Rate1  int32   `json:"rate1" gorm:"column:rate1"`
 	Rate2  int32   `json:"rate2" gorm:"column:rate2"`

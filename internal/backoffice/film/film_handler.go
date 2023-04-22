@@ -116,17 +116,28 @@ func (h *backOfficeFilmHandler) Update(w http.ResponseWriter, r *http.Request) {
 		errors, err2 := h.Validate(r.Context(), &film)
 		if !core.HasError(w, r, errors, err2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Update) {
 			if h.SaveDirectors != nil && len(film.Directors) > 0 {
-
-				h.SaveDirectors(r.Context(), film.Directors)
+				_, err := h.SaveDirectors(r.Context(), film.Directors)
+				if err != nil {
+					return
+				}
 			}
 			if h.SaveCountries != nil && len(film.Countries) > 0 {
-				h.SaveCountries(r.Context(), film.Directors)
+				_, err := h.SaveCountries(r.Context(), film.Directors)
+				if err != nil {
+					return
+				}
 			}
 			if h.SaveProductions != nil && len(film.Productions) > 0 {
-				h.SaveProductions(r.Context(), film.Productions)
+				_, err := h.SaveProductions(r.Context(), film.Productions)
+				if err != nil {
+					return
+				}
 			}
 			if h.SaveCasts != nil && len(film.Casts) > 0 {
-				h.SaveCasts(r.Context(), film.Casts)
+				_, err := h.SaveCasts(r.Context(), film.Casts)
+				if err != nil {
+					return
+				}
 			}
 			result, er3 := h.service.Update(r.Context(), &film)
 			core.HandleResult(w, r, &film, result, er3, h.Status, h.Error, h.Log)
@@ -143,17 +154,28 @@ func (h *backOfficeFilmHandler) Patch(w http.ResponseWriter, r *http.Request) {
 
 		if !core.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Patch) {
 			if h.SaveDirectors != nil && len(film.Directors) > 0 {
-
-				h.SaveDirectors(r.Context(), film.Directors)
+				_, err := h.SaveDirectors(r.Context(), film.Directors)
+				if err != nil {
+					return
+				}
 			}
 			if h.SaveCountries != nil && len(film.Countries) > 0 {
-				h.SaveCountries(r.Context(), film.Directors)
+				_, err := h.SaveCountries(r.Context(), film.Directors)
+				if err != nil {
+					return
+				}
 			}
 			if h.SaveProductions != nil && len(film.Productions) > 0 {
-				h.SaveProductions(r.Context(), film.Productions)
+				_, err := h.SaveProductions(r.Context(), film.Productions)
+				if err != nil {
+					return
+				}
 			}
 			if h.SaveCasts != nil && len(film.Casts) > 0 {
-				h.SaveCasts(r.Context(), film.Casts)
+				_, err := h.SaveCasts(r.Context(), film.Casts)
+				if err != nil {
+					return
+				}
 			}
 			result, er3 := h.service.Patch(r.Context(), json)
 			core.HandleResult(w, r, json, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Patch)

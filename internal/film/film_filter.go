@@ -6,8 +6,8 @@ import (
 
 type FilmFilter struct {
 	*search.Filter
-	Id          string   `json:"id" gorm:"primary_key,column:id" validate:"max=40" match:"equal"`
-	Title       string   `json:"title" gorm:"column:title" validate:"required,max=300" q:"true"`
+	Id          string   `json:"id" gorm:"primary_key;column:id" validate:"max=40" match:"equal"`
+	Title       string   `json:"title" gorm:"column:title" validate:"required,max=300" match:"prefix" q:"prefix"`
 	Description string   `json:"description,omitempty" gorm:"column:description" validate:"max=300"`
 	TrailerUrl  string   `json:"trailerurl,omitempty" gorm:"column:trailerurl" validate:"max=300"`
 	Status      string   `json:"status" gorm:"column:status" validate:"max=1"`

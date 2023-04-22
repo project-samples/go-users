@@ -31,8 +31,8 @@ func (r *backOfficeJobService) Load(ctx context.Context, id string) (*Job, error
 	return &room, nil
 }
 
-func (r *backOfficeJobService) Insert(ctx context.Context, room *Job) (int64, error) {
-	return r.repository.Insert(ctx, room)
+func (r *backOfficeJobService) Insert(ctx context.Context, job *Job) (int64, error) {
+	return r.repository.Insert(ctx, job)
 }
 
 func (r *backOfficeJobService) Update(ctx context.Context, room *Job) (int64, error) {
