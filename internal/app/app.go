@@ -384,7 +384,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	lookingForHandler := q.NewQueryHandler(lookingForService.Load, log.LogError)
 	directorService := q.NewStringService(db, "filmdirectors", "director")
 	directorHandler := q.NewQueryHandler(directorService.Load, log.LogError)
-	educationService := q.NewStringService(db, "usereducations", "educations")
+	educationService := q.NewStringService(db, "usereducations", "school")
 	educationHandler := q.NewQueryHandler(educationService.Load, log.LogError)
 	companiesService := q.NewStringService(db, "usercompany", "company")
 	companiesHandler := q.NewQueryHandler(companiesService.Load, log.LogError)

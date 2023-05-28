@@ -11,8 +11,8 @@ type User struct {
 	UserId       string        `json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty" validate:"required,max=40" match:"equal"`
 	Username     string        `json:"username,omitempty" gorm:"column:username" bson:"username,omitempty" dynamodbav:"username,omitempty" firestore:"username,omitempty" validate:"required,max=100"`
 	Email        string        `json:"email,omitempty" gorm:"column:email" bson:"email,omitempty" dynamodbav:"email,omitempty" firestore:"email,omitempty" validate:"email,max=100"`
-	GivenName    *string       `json:"givenname,omitempty" gorm:"column:givenname" bson:"givenname,omitempty" dynamodbav:"givenname,omitempty" firestore:"givenname,omitempty" validate:"givenname,max=100"`
-	FamilyName   string        `json:"familyname,omitempty" gorm:"column:familyname" bson:"familyname,omitempty" dynamodbav:"familyname,omitempty" firestore:"familyname,omitempty" validate:"familyname,max=100"`
+	GivenName    *string       `json:"givenName,omitempty" gorm:"column:givenname" bson:"givenname,omitempty" dynamodbav:"givenname,omitempty" firestore:"givenname,omitempty" validate:"omitempty,max=100"`
+	FamilyName   string        `json:"familyName,omitempty" gorm:"column:familyname" bson:"familyname,omitempty" dynamodbav:"familyname,omitempty" firestore:"familyname,omitempty" validate:"omitempty,max=100"`
 	Phone        *string       `json:"phone,omitempty" gorm:"column:phone" bson:"phone,omitempty" dynamodbav:"phone,omitempty" firestore:"phone,omitempty" validate:"required,phone,max=18"`
 	Occupation   *string       `json:"occupation,omitempty" gorm:"column:occupation" bson:"occupation,omitempty" dynamodbav:"occupation,omitempty" firestore:"occupation,omitempty" `
 	Company      *string       `json:"company,omitempty" gorm:"column:company" bson:"company,omitempty" dynamodbav:"company,omitempty" firestore:"company,omitempty" `
