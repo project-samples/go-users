@@ -13,4 +13,5 @@ type Job struct {
 	ApplicantCount int32      `json:"applicantCount,omitempty" gorm:"column:applicantCount" dynamodbav:"applicantCount,omitempty" firestore:"applicantCount,omitempty"`
 	Requirements   *string    `json:"requirements,omitempty" gorm:"column:requirements" dynamodbav:"requirements,omitempty" firestore:"requirements,omitempty"`
 	Benefit        *string    `json:"benefit,omitempty" gorm:"column:benefit" dynamodbav:"benefit,omitempty" firestore:"benefit,omitempty"`
+	CompanyId      string     `json:"companyId,omitempty" gorm:"column:company_id" dynamodbav:"companyid,omitempty" firestore:"companyid,omitempty"`
 }

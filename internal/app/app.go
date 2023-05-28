@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/core-go/core/unique"
 	"github.com/core-go/reaction/commentthread"
 	commentthreadreply "github.com/core-go/reaction/commentthread/comment"
 	muxcomment "github.com/core-go/reaction/commentthread/comment/mux"
@@ -67,6 +68,7 @@ import (
 	"go-service/internal/article"
 	bocinema "go-service/internal/backoffice/cinema"
 	bocompany "go-service/internal/backoffice/company"
+	boentity "go-service/internal/backoffice/entity"
 	bojob "go-service/internal/backoffice/job"
 	bolocation "go-service/internal/backoffice/location"
 	bomusic "go-service/internal/backoffice/music"
@@ -143,6 +145,7 @@ type ApplicationContext struct {
 	BackofficeCinema  bocinema.CinemaHandler
 	BackofficeFilm    bofilm.BackOfficeFilmHandler
 	BackofficeCompany bocompany.BackofficeCompanyHandler
+	BackofficeEntity  boentity.EntityTransport
 	FilmCategory      category.CategoryHandler
 	CompanyCategory   category.CategoryHandler
 	ItemCategory      category.CategoryHandler
@@ -225,7 +228,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	cloudService, _ := CreateCloudService(ctx, conf)
 
 	buildParam := q.GetBuild(db)
-	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml")
+	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml", "configs/entity.xml")
 	if err != nil {
 		return nil, err
 	}
@@ -1074,6 +1077,25 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	boCompanyHandler := bocompany.NewBackofficeCompanyHandler(bocompanySearchBuilder.Search, boCompanyService, log.LogError, nil, validator.Validate, modelStatus, action, boCompanyUploadService, conf.KeyFile, generateId)
 
+	// entity
+	entityType := reflect.TypeOf(boentity.Entity{})
+	queryEntity, err := template.UseQuery(conf.Template, sq.UseQuery(db, "entities", entityType, buildParam), "entity", templates, &entityType, convert.ToMap, buildParam)
+	if err != nil {
+		return nil, err
+	}
+	entitiesearchBuilder, err := sql.NewSearchBuilder(db, entityType, queryEntity)
+	if err != nil {
+		return nil, err
+	}
+	entityValidator := unique.NewUniqueFieldValidator(db, "entities", "entityname", entityType, validator.Validate)
+	entityRepository, er7 := boentity.NewEntityRepository(db)
+	if er7 != nil {
+		return nil, er7
+	}
+	entitieservice := boentity.Newentitieservice(entityRepository)
+	generateEntityId := shortid.Func(conf.AutoEntityId)
+	entityHandler := boentity.NewEntityHandler(entitiesearchBuilder.Search, entitieservice, conf.Writer, logError, generateEntityId, entityValidator.Validate, conf.Tracking, nil)
+
 	// rate company
 	companyRateService := rates.NewRatesService(db, 5,
 		"companyrate", "id", "rate", "rates", "review", "author", "anonymous", "time", "usefulcount", "replycount",
@@ -1247,6 +1269,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		BackofficeCinema:      boCinemaHandler,
 		BackofficeFilm:        boFilmHandler,
 		BackofficeCompany:     boCompanyHandler,
+		BackofficeEntity:      entityHandler,
 		FilmCategory:          filmCategoryHandler,
 		CompanyCategory:       companyCategoryHandler,
 		ItemCategory:          itemCategoryHandler,

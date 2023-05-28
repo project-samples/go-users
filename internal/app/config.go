@@ -33,12 +33,14 @@ type Config struct {
 	Status                *StatusConfig                 `mapstructure:"status"`
 	UserStatus            UserStatusConfig              `mapstructure:"user_status"`
 	Auth                  AuthMailConfig                `mapstructure:"auth"`
-	Authorize        	  sqlauth.SqlAuthConfig     	`mapstructure:"authorize"`
+	Authorize             sqlauth.SqlAuthConfig         `mapstructure:"authorize"`
 	Password              PasswordMailConfig            `mapstructure:"password"`
 	SignUp                SignUpConfigWithEmailTemplate `mapstructure:"sign_up"`
 	//OAuth2                OAuth2Config                  `mapstructure:"oauth2"`
-	Mail                  MailConfig                    `mapstructure:"mail"`
+	Mail MailConfig `mapstructure:"mail"`
 	//CallBackURL           CallbackURL                   `mapstructure:"callback_url"`
+	AutoEntityId *bool           `mapstructure:"auto_entity_id"`
+	Writer       sv.WriterConfig `mapstructure:"writer"`
 
 	Tracking          builder.TrackingConfig `mapstructure:"action"`
 	Template          bool                   `mapstructure:"template"`

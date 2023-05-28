@@ -5,123 +5,6 @@
 -- Dumped from database version 14.1
 -- Dumped by pg_dump version 14.1
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;a
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
-ALTER TABLE ONLY public.users DROP CONSTRAINT users_pkey;
-ALTER TABLE ONLY public.userreaction DROP CONSTRAINT userreaction_pkey;
-ALTER TABLE ONLY public.userratereaction DROP CONSTRAINT userratereaction_pkey;
-ALTER TABLE ONLY public.userrateinfo DROP CONSTRAINT userrateinfo_pkey;
-ALTER TABLE ONLY public.userratecomment DROP CONSTRAINT userratecomment_pkey;
-ALTER TABLE ONLY public.userrate DROP CONSTRAINT userrate_pkey;
-ALTER TABLE ONLY public.userskills DROP CONSTRAINT skills_pkey;
-ALTER TABLE ONLY public.usersearchs DROP CONSTRAINT searchs_pkey;
-DROP TABLE public.userskills;
-DROP TABLE public.usersearchs;
-DROP TABLE public.users;
-DROP TABLE public.userreaction;
-DROP TABLE public.userratereaction;
-DROP TABLE public.userrateinfo;
-DROP TABLE public.userratecomment;
-DROP TABLE public.userrate;
-DROP TABLE public.userinterests;
-DROP TABLE public.userinfomation;
-DROP TABLE public.userinfo;
-DROP TABLE public.userfollowing;
-DROP TABLE public.userfollower;
-DROP TABLE public.usereducations;
-DROP TABLE public.usercompanies;
-DROP TABLE public.signupcodes;
-DROP TABLE public.savedlocation;
-DROP TABLE public.saveditem;
-DROP TABLE public.room;
-DROP TABLE public.reservation;
-DROP TABLE public.playlist;
-DROP TABLE public.passwords;
-DROP TABLE public.passwordcodes;
-DROP TABLE public.music;
-DROP TABLE public.locationreplycommentreaction;
-DROP TABLE public.locationreplycommentinfo;
-DROP TABLE public.locationreplycomment;
-DROP TABLE public.locationratereaction;
-DROP TABLE public.locationrate;
-DROP TABLE public.locationinfomation;
-DROP TABLE public.locationinfo;
-DROP TABLE public.locationfollowing;
-DROP TABLE public.locationfollower;
-DROP TABLE public.locationcommentthreadreaction;
-DROP TABLE public.locationcommentthreadinfo;
-DROP TABLE public.locationcommentthread;
-DROP TABLE public.locationcomment;
-DROP TABLE public.location;
-DROP TABLE public.job;
-DROP TABLE public.itemresponsereaction;
-DROP TABLE public.itemresponse;
-DROP TABLE public.iteminfo;
-DROP TABLE public.itemcomment;
-DROP TABLE public.itemcategory;
-DROP TABLE public.item;
-DROP TABLE public.integrationconfiguration;
-DROP TABLE public.history;
-DROP TABLE public.filmreplycommentreaction;
-DROP TABLE public.filmreplycommentinfo;
-DROP TABLE public.filmreplycomment;
-DROP TABLE public.filmratereaction;
-DROP TABLE public.filmrateinfo;
-DROP TABLE public.filmratecomment;
-DROP TABLE public.filmrate;
-DROP TABLE public.filmproductions;
-DROP TABLE public.filmdirectors;
-DROP TABLE public.filmcommentthreadreaction;
-DROP TABLE public.filmcommentthreadinfo;
-DROP TABLE public.filmcommentthread;
-DROP TABLE public.filmcategory;
-DROP TABLE public.filmcasts;
-DROP TABLE public.film;
-DROP TABLE public.countries;
-DROP TABLE public.companyratereaction;
-DROP TABLE public.companyrateinfo05;
-DROP TABLE public.companyrateinfo04;
-DROP TABLE public.companyrateinfo03;
-DROP TABLE public.companyrateinfo02;
-DROP TABLE public.companyrateinfo01;
-DROP TABLE public.companyratefullinfo;
-DROP TABLE public.companyrate;
-DROP TABLE public.companycomment;
-DROP TABLE public.companycategory;
-DROP TABLE public.company_users;
-DROP TABLE public.company;
-DROP TABLE public.cinema;
-DROP TABLE public.category;
-DROP TABLE public.brand;
-DROP TABLE public.authentication;
-DROP TABLE public.authencodes;
-DROP TABLE public.articleratereaction;
-DROP TABLE public.articleratecomment;
-DROP TABLE public.articlerate;
-DROP TABLE public.articleinfo;
-DROP TABLE public.articlecommentthreadreaction;
-DROP TABLE public.articlecommentthreadinfo;
-DROP TABLE public.articlecommentthread;
-DROP TABLE public.articlecommentreaction;
-DROP TABLE public.articlecommentinfo;
-DROP TABLE public.articlecomment;
-DROP TABLE public.article;
-DROP TABLE public.appreciationreaction;
-DROP TABLE public.appreciationcomment;
-DROP TABLE public.appreciation;
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
 --
 -- Name: appreciation; Type: TABLE; Schema: public; Owner: postgres
 --
@@ -665,6 +548,40 @@ CREATE TABLE public.countries (
 
 
 --countries OWNER TO postgres;
+
+--
+-- Name: entities; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.entities (
+                                 entityid character varying(40) NOT NULL,
+                                 entityname character varying(255) NOT NULL,
+                                 email character varying(255) NOT NULL,
+                                 displayname character varying(255) NOT NULL,
+                                 status character(1) NOT NULL,
+                                 phone character varying(20),
+                                 imageurl character varying(500),
+                                 createdby character varying(40),
+                                 createdat timestamp without time zone,
+                                 updatedby character varying(40),
+                                 updatedat timestamp without time zone,
+                                 lastlogin timestamp without time zone
+);
+
+
+--entities OWNER TO postgres;
+
+--
+-- Name: entityusers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.entityusers (
+                                    entityid character varying(40) NOT NULL,
+                                    userid character varying(40) NOT NULL
+);
+
+
+--entityusers OWNER TO postgres;
 
 --
 -- Name: film; Type: TABLE; Schema: public; Owner: postgres
@@ -1800,6 +1717,12 @@ INSERT INTO public.articlecommentthreadreaction VALUES ('7qUfAFE_z', 'pu65Tr6FE'
 INSERT INTO public.articleinfo VALUES ('abw6F9-ap', 3.2000000000000000, 0, 0, 4, 1, 0, 5, 16);
 
 
+--
+-- Data for Name: articlerate; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.articlerate VALUES ('abw6F9-ap', 'uEyz9MqaM', 3, '2023-03-27 16:37:42.861', 'a', 1, 2, '{"{\"rate\": 4, \"time\": \"2023-03-27T02:27:57.032Z\", \"review\": \"hi\"}","{\"rate\": 5, \"time\": \"2023-03-27T02:32:15.778Z\", \"review\": \"yolo\"}"}', NULL);
+
 
 --
 -- Data for Name: articleratecomment; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -1901,49 +1824,49 @@ INSERT INTO public.companycategory VALUES ('Business services', 'Business servic
 -- Data for Name: companyrate; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyrate VALUES ('mb-bank', 'pu65Tr6FE', 4, '2023-05-12 13:40:29.215469', '', 0, 0, NULL, '{3,4,4,4,5}', false);
+INSERT INTO public.companyrate VALUES ('id5', 'uEyz9MqaM', 4, '2023-05-28 20:53:29.093423', '', 0, 0, NULL, '{4,4,4,4,4}', false);
 
 
 --
 -- Data for Name: companyratefullinfo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyratefullinfo VALUES ('mb-bank', 4, 3, 4, 4, 4, 5, 1, 4);
+INSERT INTO public.companyratefullinfo VALUES ('id5', 4.0000000000000001, 1.4285714285714286, 2.2857142857142856, 3.2857142857142856, 4.142857142857143, 5, 1, 4.0000000000000001);
 
 
 --
 -- Data for Name: companyrateinfo01; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyrateinfo01 VALUES ('mb-bank', 3, 0, 0, 1, 0, 0, 1, 3);
+INSERT INTO public.companyrateinfo01 VALUES ('id5', 1.4285714285714286, 6, 0, 0, 1, 0, 7, 10);
 
 
 --
 -- Data for Name: companyrateinfo02; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyrateinfo02 VALUES ('mb-bank', 4, 0, 0, 0, 1, 0, 1, 4);
+INSERT INTO public.companyrateinfo02 VALUES ('id5', 2.2857142857142857, 0, 6, 0, 1, 0, 7, 16);
 
 
 --
 -- Data for Name: companyrateinfo03; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyrateinfo03 VALUES ('mb-bank', 4, 0, 0, 0, 1, 0, 1, 4);
+INSERT INTO public.companyrateinfo03 VALUES ('id5', 3.2857142857142857, 0, 0, 6, 0, 1, 7, 23);
 
 
 --
 -- Data for Name: companyrateinfo04; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyrateinfo04 VALUES ('mb-bank', 4, 0, 0, 0, 1, 0, 1, 4);
+INSERT INTO public.companyrateinfo04 VALUES ('id5', 4.1428571428571429, 0, 0, 0, 6, 1, 7, 29);
 
 
 --
 -- Data for Name: companyrateinfo05; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.companyrateinfo05 VALUES ('mb-bank', 5, 0, 0, 0, 0, 1, 1, 5);
+INSERT INTO public.companyrateinfo05 VALUES ('id5', 5.0000000000000000, 0, 0, 0, 0, 7, 7, 35);
 
 
 --
@@ -1961,6 +1884,19 @@ INSERT INTO public.countries VALUES ('United State');
 INSERT INTO public.countries VALUES ('England');
 INSERT INTO public.countries VALUES ('Chinese');
 INSERT INTO public.countries VALUES ('Australia');
+
+
+--
+-- Data for Name: entities; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.entities VALUES ('test01', 'eeee', 'demo@keystonejs.com', 'eeee', 'A', '343453 453-45345', '', NULL, NULL, NULL, NULL, NULL);
+
+
+--
+-- Data for Name: entityusers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
 
 
 --
@@ -2210,52 +2146,60 @@ INSERT INTO public.itemresponse VALUES ('03', 'pu65Tr6FE', 'abc', '2023-04-11 17
 -- Data for Name: job; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.job VALUES ('senior-backend', 'Senior Backend Developer (Java, Kotlin, MySQL)', NULL, '2023-05-24 17:00:00+00', '2023-05-29 17:00:00+00', 1, 1, NULL, '3 Lý Do Để Gia Nhập Công Ty
-Chance to work with a biggest global publisher
-Development and design focused production process
-Talents with international experience/background', 'mb-bank', '["java"]');
-INSERT INTO public.job VALUES ('tetst', 'Senior DevOps Engineer - Salary Up to $2800', 'Collaborate with Front-End Developers to integrate user-facing elements with server-side logic and other applications APIs;
-Maintain and improve running-functionality as well as design and develop new system, new feature;
-Develop and maintain Back-End Code that improves analytical and statistical modeling and forecasting methods to support business tribes in their decision-making process;
-Create data structures from scratch;
-Actively test and debug code defect;
-Research to learn technology and knowledge needed to develop products for the global market.', '2023-05-24 17:00:00+00', '2023-05-30 17:00:00+00', 1, 1, 'Bachelor’s degree in computer science, software development, engineering, or a related technical field;
-From 3 to 5 years of experience of “server-side” programming languages in Java/ Kotlin to serve large-scale and high-traffic projects;
-Proficient in SQL, PL/SQL, knowledgeable about Oracle/MySQL, NoSQL database management systems, capable of database optimization;
-Experience in Control Systems such as SVN, CVS or Git/ Operating System such as Linux;
-Solid experience in developing API Server;
-Experience in Project Management;
-Deep knowledge and experience in Object-Oriented and Functional Programming;
-Deep knowledge and experience in Data Structure, Algorithm;
-Detail-oriented and efficient time manager who thrives in a dynamic and fast- paced working environment;
-Fluent in English is a plus point', 'Analyze and organize raw data
+INSERT INTO public.job VALUES ('senior-backend', 'Senior Backend Developer (Java, Kotlin, MySQL)', '• Analyze and organize raw data
+• Build data systems and pipelines
+• Prepare data for prescriptive and predictive modeling
+• Combine raw information from different sources
+• Explore ways to enhance data quality and reliability
+• Identify opportunities for data acquisition
+• Data pipeline maintenance/testing.', '2023-05-24 17:00:00+00', '2023-05-29 17:00:00+00', 1, 1, 'asdsadasd', 'Analyze and organize raw data
+
 Build data systems and pipelines
+
 Prepare data for prescriptive and predictive modeling
+
 Combine raw information from different sources
 Explore ways to enhance data quality and reliability
 Identify opportunities for data acquisition
-Data pipeline maintenance/testing.
-', 'mb-bank', '["java","nodejs"]');
-INSERT INTO public.job VALUES ('business-analyst-jp', 'Business Analyst (Japanese)', '• Meeting with customer to get request and analyze/clarify it.
-• Analyze customer material (UI definition, initial specs).
-• Create Detail Design (DD) and Basic Design (BD) document:
-• Define business flow, business logic
-• Prioritize tasks and communicate to senior management effort estimates and project status periodically.
-• Do the rough estimation when getting requirement, or participate on the estimation (with development team)
-• Participate into team collaborative design and document review (for DD & Test) activities.
-• Will collaborate proactively with functional analysts to translate business and integration requirements into function scope & test scenarios, then solutions.
-• Have application maintenance ownership, and the ability to work effectively with other various technologies and account teams.', '2023-05-24 17:00:00+00', '2023-05-30 17:00:00+00', 1, 1, 'Basic Qualification:
-• Have at least 03 years’ experience on BA position.
-• Good at speaking / reading / writing skill in Japanese (~N2+)
-• Have experience in working in agile environment and doing multi project scope at the same time.
-• Familiar with GIT, JIRA to manage task & CR.
-• Have knowledge in GIT
+Data pipeline maintenance/testing.', 'mb-bank', '["java"]');
+INSERT INTO public.job VALUES ('wrwergwsr', 'werewrwr', NULL, NULL, NULL, 1, 1, NULL, NULL, 'mb-bank', '[]');
+INSERT INTO public.job VALUES ('business-analyst-jp', 'Business Analyst (Japanese)', 'Previous experience as a data engineer or in a similar role
 
-Nice to have:
-• 1+ year experience for developer position
-• Product thinking.
-• Have experience and good knowledge in mobile application validation development
-• Proactive, hard-working, high responsibility and commitment are mandatory character for candidate who wants to join our team.', NULL, 'mb-bank', '["BA"]');
+
+
+Technical expertise with data models, data mining, and segmentation techniques
+
+Knowledge of programming languages (e.g. Java and Python)
+Experience with data architecture and data modeling
+Hands-on experience with SQL database design
+Great numerical and analytical skills
+
+Degree in Computer Science, IT, or similar field; a Masters is a plus
+
+Data engineering certification (e.g IBM Certified Data Engineer) is a plus
+', '2023-05-24 17:00:00+00', '2023-05-30 17:00:00+00', 1, 2, '<ul style="padding: 0px 0px 0px 2rem; margin-right: 0px; margin-bottom: 1rem; margin-left: 0px; color: rgb(58, 58, 58); font-family: Roboto, sans-serif; font-size: 16px; letter-spacing: normal;"><li>Previous experience as a data engineer or in a similar role</li><li>Technical expertise with data models, data mining, and segmentation techniques</li><li>Knowledge of programming languages (e.g. Java and Python)</li><li>Experience with data architecture and data modeling</li><li>Hands-on experience with SQL database design</li><li>Great numerical and analytical skills</li><li>Degree in Computer Science, IT, or similar field; a Masters is a plus</li><li>Data engineering certification (e.g IBM Certified Data Engineer) is a plus</li></ul>', '• • • Previous experience as a data engineer or in a similar role
+• • • Technical expertise with data models, data mining, and segmentation techniques
+• • • Knowledge of programming languages (e.g. Java and Python)
+• • • Experience with data architecture and data modeling', 'mb-bank', '["BA"]');
+INSERT INTO public.job VALUES ('tetst', 'Senior DevOps Engineer - Salary Up to $2800', '1. Collaborate with Front-End Developers to integrate user-facing elements with server-side logic and other applications APIs;
+2. Maintain and improve running-functionality as well as design and develop new system, new feature; d
+3. Develop and maintain Back-End Code that improves analytical and statistical modeling and forecasting methods to support business tribes in their decision-making process;
+4. Create data structures from scratch;
+5. Actively test and debug code defect;
+6. Research to learn technology and knowledge needed to develop products for the global market.', '2023-05-24 17:00:00+00', '2023-05-30 17:00:00+00', 1, 1, '1. Analyze and organize raw data
+2. Build data systems and pipelines
+3. Prepare data for prescriptive and predictive modeling
+4. Combine raw information from different sources
+5. Explore ways to enhance data quality and reliability
+6. Identify opportunities for data acquisition
+7. Data pipeline maintenance/testing.', '1. Analyze and organize raw data
+2. Build data systems and pipelines
+3. Prepare data for prescriptive and predictive modeling
+4. Combine raw information from different sources
+5. Explore ways to enhance data quality and reliability
+6. Identify opportunities for data acquisition
+7. Data pipeline maintenance/testing.
+8. ', 'mb-bank', '["java","nodejs"]');
 
 
 --
@@ -2489,7 +2433,7 @@ INSERT INTO public.passwords VALUES ('h3-bIa9tp', '$2a$10$Gy06IjZ463EEGKclZ8t41.
 INSERT INTO public.passwords VALUES ('mPOdF3rap', '$2a$10$RYOJbtG1crorHlvkRpjcO.Cf21BWnEQXisdGtqKt2NDj0bRovv0/C', NULL, NULL, 0, NULL, '{$2a$10$tTDVSw3T3PRwy.heR6nKQ.KDHE1Del.U9IZqW25yOB4hcPpVp9x.6,$2a$10$y3AU6LXkjXD1ciFDHk/zqueejCi6Uhqnx7kzQBYrvwLZvXtoHOvB.,""}');
 INSERT INTO public.passwords VALUES ('1c7TAkSsA', '$2b$10$OLrEW8KE4OS8xbccTS72uuqNh7GMhcrHyuZJx7q6tm0rAJk54I3oi', '2022-11-10 03:08:12.467+00', NULL, 0, NULL, NULL);
 INSERT INTO public.passwords VALUES ('pu65Tr6FE', '$2b$10$cuUU9pZcxnrvYbZLw8echezSHZ.l44or37RuG9O9K53prUf3cvjLO', '2023-05-12 06:40:13.736247+00', NULL, 0, NULL, NULL);
-INSERT INTO public.passwords VALUES ('uEyz9MqaM', '$2a$10$NS/TlMoJsvb/fHJsThDCHOSQq0XC5uDMgrf769paxRGh8DL1/5Gb2', '2023-05-25 06:20:22.292983+00', NULL, 0, NULL, NULL);
+INSERT INTO public.passwords VALUES ('uEyz9MqaM', '$2a$10$NS/TlMoJsvb/fHJsThDCHOSQq0XC5uDMgrf769paxRGh8DL1/5Gb2', '2023-05-29 07:30:28.30224+00', NULL, 0, NULL, NULL);
 
 
 --
@@ -2663,6 +2607,134 @@ INSERT INTO public.userskills VALUES ('express');
 INSERT INTO public.userskills VALUES ('codeigniter');
 INSERT INTO public.userskills VALUES ('react native');
 INSERT INTO public.userskills VALUES ('flutter');
+
+
+--
+-- Name: companycomment companycomment_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companycomment
+    ADD CONSTRAINT companycomment_pk PRIMARY KEY (commentid);
+
+
+--
+-- Name: companyrate companyrate_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyrate
+    ADD CONSTRAINT companyrate_pk PRIMARY KEY (id, author);
+
+
+--
+-- Name: companyratefullinfo companyratefullinfo_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyratefullinfo
+    ADD CONSTRAINT companyratefullinfo_pk PRIMARY KEY (id);
+
+
+--
+-- Name: companyrateinfo01 companyrateinfo01_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyrateinfo01
+    ADD CONSTRAINT companyrateinfo01_pk PRIMARY KEY (id);
+
+
+--
+-- Name: companyrateinfo02 companyrateinfo02_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyrateinfo02
+    ADD CONSTRAINT companyrateinfo02_pk PRIMARY KEY (id);
+
+
+--
+-- Name: companyrateinfo03 companyrateinfo03_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyrateinfo03
+    ADD CONSTRAINT companyrateinfo03_pk PRIMARY KEY (id);
+
+
+--
+-- Name: companyrateinfo04 companyrateinfo04_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyrateinfo04
+    ADD CONSTRAINT companyrateinfo04_pk PRIMARY KEY (id);
+
+
+--
+-- Name: companyrateinfo05 companyrateinfo05_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyrateinfo05
+    ADD CONSTRAINT companyrateinfo05_pk PRIMARY KEY (id);
+
+
+--
+-- Name: companyratereaction companyratereaction_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.companyratereaction
+    ADD CONSTRAINT companyratereaction_pk PRIMARY KEY (id);
+
+
+--
+-- Name: entities entities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.entities
+    ADD CONSTRAINT entities_pkey PRIMARY KEY (entityid);
+
+
+--
+-- Name: entityusers entityusers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.entityusers
+    ADD CONSTRAINT entityusers_pkey PRIMARY KEY (entityid, userid);
+
+
+--
+-- Name: location location_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.location
+    ADD CONSTRAINT location_pk PRIMARY KEY (id);
+
+
+--
+-- Name: locationcomment locationcomment_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.locationcomment
+    ADD CONSTRAINT locationcomment_pk PRIMARY KEY (commentid);
+
+
+--
+-- Name: locationcommentthread locationcommentthread_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.locationcommentthread
+    ADD CONSTRAINT locationcommentthread_pk PRIMARY KEY (commentid);
+
+
+--
+-- Name: locationcommentthreadinfo locationcommentthreadinfo_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.locationcommentthreadinfo
+    ADD CONSTRAINT locationcommentthreadinfo_pk PRIMARY KEY (commentid);
+
+
+--
+-- Name: room room_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.room
+    ADD CONSTRAINT room_pk PRIMARY KEY (id);
 
 
 --

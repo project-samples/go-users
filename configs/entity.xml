@@ -1,0 +1,21 @@
+<select id="entity">
+    select *
+    from entities
+    where
+    <if test="entityname != null">
+        entityname like #{entityname} and
+    </if>
+    <if test="displayName != null">
+        displayName like #{displayName} and
+    </if>
+    <if test="status != null">
+        status in (#{status}) and
+    </if>
+    <if test="q != null">
+        (entityname like #{q} or displayName like #{q} or email like #{q}) and
+    </if>
+    1 = 1
+    <if test="sort != null">
+        order by {sort}
+    </if>
+</select>

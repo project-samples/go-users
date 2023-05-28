@@ -58,6 +58,11 @@ status:
   suspended: S
   disable: E
 
+writer:
+  status:
+    success: 1
+    version_error: 2
+    error: 4
 auth:
   expires: 3600
   template:

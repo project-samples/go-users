@@ -234,6 +234,7 @@ func Route(router *mux.Router, context context.Context, root Config) error {
 	//companies
 	company := "/companies"
 	r.HandleFunc(company+"/search", app.Company.Search).Methods(GET, POST)
+	r.HandleFunc(company+"/{id}", app.Company.Load).Methods(GET)
 	r.HandleFunc(company+"/user/{id}", app.Company.GetByUserId).Methods(GET)
 
 	companyrate := "/companies/rates"
@@ -311,6 +312,14 @@ func Route(router *mux.Router, context context.Context, root Config) error {
 	r.HandleFunc(bocompany+"/{id}", app.BackofficeCompany.Update).Methods(PUT)
 	r.HandleFunc(bocompany+"/{id}", app.BackofficeCompany.Patch).Methods(PATCH)
 	r.HandleFunc(bocompany+"/{id}", app.BackofficeCompany.Delete).Methods(DELETE)
+
+	entities := "/backoffice/entities"
+	r.HandleFunc(entities+"/search", app.BackofficeEntity.Search).Methods(GET, POST)
+	r.HandleFunc(entities+"/{entityId}", app.BackofficeEntity.Load).Methods(GET)
+	r.HandleFunc(entities, auMiddleware.ThenFn(app.BackofficeEntity.Create)).Methods(POST)
+	r.HandleFunc(entities+"/{entityId}", auMiddleware.ThenFn(app.BackofficeEntity.Update)).Methods(PUT)
+	r.HandleFunc(entities+"/{entityId}", auMiddleware.ThenFn(app.BackofficeEntity.Patch)).Methods(PATCH)
+	r.HandleFunc(entities+"/{entityId}", auMiddleware.ThenFn(app.BackofficeEntity.Delete)).Methods(DELETE)
 
 	// backoffice location
 	bolocation := "/backoffice/locations"
