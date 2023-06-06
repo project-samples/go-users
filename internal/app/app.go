@@ -376,7 +376,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 	searchUserRateCommentHandler := search.NewSearchHandler(searchUserRateCommentBuilder.Search, searchUserRateCommentType, searchUserRateCommentFilterType, logError, nil)
-	skillService := q.NewStringService(db, "skills", "skill")
+	skillService := q.NewStringService(db, "userskills ", "skill")
 	skillHandler := q.NewQueryHandler(skillService.Load, log.LogError)
 	interestService := q.NewStringService(db, "interests", "interest")
 	interestHandler := q.NewQueryHandler(interestService.Load, log.LogError)

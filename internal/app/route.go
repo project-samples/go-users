@@ -43,6 +43,9 @@ func Route(router *mux.Router, context context.Context, root Config) error {
 	user := "/users"
 	r.HandleFunc(user+"/search", app.User.Search).Methods(GET, POST)
 	r.HandleFunc(user+"/{id}", app.User.Load).Methods(GET)
+	r.HandleFunc(user+"/follow/{id}/{target}", app.Follow.Follow).Methods(GET)
+	r.HandleFunc(user+"/unfollow/{id}/{target}", app.Follow.UnFollow).Methods(DELETE)
+	r.HandleFunc(user+"/checkfollow/{id}/{target}", app.Follow.Check).Methods(GET)
 	r.HandleFunc(user+"/loadfollow/{id}", app.UserInfomation.Load).Methods(GET)
 
 	r.HandleFunc(user+"/rates/comments", app.SearchUserRateComment.Search).Methods(POST)
